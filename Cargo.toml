@@ -1,8 +1,50 @@
 [package]
+edition = "2021"
 name = "rcrd"
 version = "0.1.0"
-edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+doc = false
+name = "controller"
+path = "src/main.rs"
+
+[[bin]]
+doc = false
+name = "crdgen"
+path = "src/crdgen.rs"
+
+[lib]
+name = "controller"
+path = "src/lib.rs"
+
+[features]
+default = []
+telemetry = ["tonic", "opentelemetry-otlp"]
 
 [dependencies]
+actix-web = "4.0.1"
+chrono = {version = "0.4.19", features = ["serde"]}
+futures = "0.3.21"
+k8s-openapi = {version = "0.14.0", features = ["v1_22"], default-features = false}
+opentelemetry = {version = "0.17.0", features = ["trace", "rt-tokio"]}
+opentelemetry-otlp = {version = "0.10.0", features = ["tokio"], optional = true}
+prometheus = "0.13.0"
+schemars = {version = "0.8.8", features = ["chrono"]}
+serde = {version = "1.0.136", features = ["derive"]}
+serde_json = "1.0.79"
+serde_yaml = "0.8.23"
+thiserror = "1.0.30"
+tokio = {version = "1.16.1", features = ["macros", "rt-multi-thread"]}
+tracing = "0.1.32"
+tracing-opentelemetry = "0.17.2"
+tracing-subscriber = {version = "0.3.1", features = ["json", "env-filter"]}
+# Can't upgrade this until opentelemetry-otlp upgrades it
+tonic = {version = "0.6.2", optional = true}
+
+# exemplar support (broken atm)
+#prometheus = { git = "https://github.com/clux/rust-prometheus.git", rev = "c9f7ea9652e27cd2d872937c5efbe72f20db0d5e" }
+#prometheus = { path = "../rust-prometheus" }
+
+[dependencies.kube]
+features = ["runtime", "client", "derive"]
+version = "0.70.0"

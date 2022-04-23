@@ -1,0 +1,33 @@
+name: Main CI
+on: [push]
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+          - 4571:4571
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup Cargo
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Create k8s Kind Cluster
+        uses: jerry153fish/kind-action@main
+
+      - name: Wait for localstack
+        run: |
+          ./wait-for.sh http://localhost:4566/health -t 300 -- echo 'localstack up'
+
+      - name: Run unit tests
+        run: |
+          make test
