@@ -52,3 +52,7 @@ controller:
 
 test:
 	cargo test --all-targets
+
+fmt:
+	#rustup component add rustfmt --toolchain nightly
+	rustfmt --edition 2021 $$(find . -type f -iname *.rs)

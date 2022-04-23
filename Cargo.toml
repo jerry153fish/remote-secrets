@@ -47,4 +47,4 @@ tonic = {version = "0.6.2", optional = true}
 
 [dependencies.kube]
 features = ["runtime", "client", "derive"]
-version = "0.70.0"
+version = "0.71.0"
