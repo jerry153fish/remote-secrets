@@ -23,7 +23,53 @@ use std::{collections::HashMap, sync::Arc};
 #[kube(status = "RcrdStatus")]
 pub struct RcrdSpec {
     name: String,
-    info: String,
+    #[serde(default)]
+    resources: Vec<Backend>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
+pub struct Backend {
+    /// Remote backend type
+    backend: BackendType,
+
+    /// Secret data configurations
+    #[serde(default)]
+    data: Vec<SecretData>,
+
+    /// Pulumi secret for the pulumi backend
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pulumi_token: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
+pub struct SecretData {
+    /// name for the remote backend
+    /// for ssm / paramstore / application configuration this is the name or arn
+    /// for cloudformation and pulumi this is the stack name
+    remote_name: String,
+
+    /// whether the remote data is jsonstrinified string or not
+    is_json_string: bool,
+
+    /// nested path for the remote data
+    #[serde(skip_serializing_if = "Option::is_none")]
+    remote_nest_path: Option<String>,
+
+    /// secret field name
+    #[serde(skip_serializing_if = "Option::is_none")]
+    secret_field_name: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
+enum BackendType {
+    SSM,
+    SecretManager,
+    Cloudformation,
+    AppConfig,
+    Pulumi,
+    Plaintext,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
