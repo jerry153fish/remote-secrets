@@ -50,5 +50,5 @@ crdgen:
 controller:
 	cargo run --bin controller
 
-test: pre-test
+test:
 	cargo test --all-targets
