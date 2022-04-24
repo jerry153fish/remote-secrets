@@ -15,13 +15,13 @@ use std::{collections::HashMap, sync::Arc};
 /// Our Foo custom resource spec
 #[derive(CustomResource, Deserialize, Serialize, Clone, Debug, JsonSchema)]
 #[kube(
-    kind = "Rcrd",
+    kind = "RSecret",
     group = "jerry153fish.com",
     version = "v1beta1",
     namespaced
 )]
-#[kube(status = "RcrdStatus")]
-pub struct RcrdSpec {
+#[kube(status = "RSecretStatus")]
+pub struct RSecretdSpec {
     name: String,
     #[serde(default)]
     resources: Vec<Backend>,
@@ -73,7 +73,7 @@ enum BackendType {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
-pub struct RcrdStatus {
+pub struct RSecretStatus {
     is_bad: bool,
     //last_updated: Option<DateTime<Utc>>,
 }

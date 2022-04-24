@@ -11,6 +11,10 @@ jobs:
         ports:
           - 4566:4566
           - 4571:4571
+    env:
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: foobar
+      AWS_SECRET_ACCESS_KEY: foobar
 
     steps:
       - name: Check out repository code
@@ -30,12 +34,16 @@ jobs:
         with:
           toolchain: stable
 
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+
       - name: Create k8s Kind Cluster
         uses: jerry153fish/kind-action@main
 
       - name: Wait for localstack
         run: |
           ./wait-for.sh http://localhost:4566/health -t 300 -- echo 'localstack up'
+          make init-test && sleep 2
 
       - name: Run unit tests
         run: |

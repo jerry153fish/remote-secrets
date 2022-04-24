@@ -51,7 +51,10 @@ controller:
 	cargo run --bin controller
 
 test:
-	cargo test --all-targets
+	export TEST_ENV=true && cargo test --all-targets -- --nocapture
+
+init-test:
+	aws ssm put-parameter --endpoint-url http://localhost:4566 --name "MyStringParameter" --type "String" --value "Vici" --overwrite > /dev/null || true
 
 fmt:
 	#rustup component add rustfmt --toolchain nightly
