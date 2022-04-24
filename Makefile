@@ -50,8 +50,11 @@ crdgen:
 controller:
 	cargo run --bin controller
 
-test:
-	cargo test --all-targets
+test: init-test
+	export TEST_ENV=true && cargo test --all-targets -- --nocapture
+
+init-test:
+	aws ssm put-parameter --endpoint-url http://localhost:4566 --name "MyStringParameter" --type "String" --value "Vici" --overwrite > /dev/null 2>&1 < /dev/null
 
 fmt:
 	#rustup component add rustfmt --toolchain nightly

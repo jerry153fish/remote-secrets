@@ -1332,26 +1332,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rcrd"
-version = "0.1.0"
-dependencies = [
- "aws-config",
- "aws-sdk-appconfig",
- "aws-sdk-cloudformation",
- "aws-sdk-secretsmanager",
- "aws-sdk-ssm",
- "chrono",
- "k8s-openapi",
- "kube",
- "schemars",
- "serde",
- "serde_json",
- "serde_yaml",
- "thiserror",
- "tokio",
-]
-
-[[package]]
 name = "redox_syscall"
 version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1387,6 +1367,29 @@ name = "regex-syntax"
 version = "0.6.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
+
+[[package]]
+name = "remote-secrets"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-appconfig",
+ "aws-sdk-cloudformation",
+ "aws-sdk-secretsmanager",
+ "aws-sdk-ssm",
+ "aws-smithy-http",
+ "aws-types",
+ "chrono",
+ "http",
+ "k8s-openapi",
+ "kube",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "thiserror",
+ "tokio",
+]
 
 [[package]]
 name = "ring"

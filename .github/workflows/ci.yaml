@@ -33,6 +33,9 @@ jobs:
       - name: Create k8s Kind Cluster
         uses: jerry153fish/kind-action@main
 
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+
       - name: Wait for localstack
         run: |
           ./wait-for.sh http://localhost:4566/health -t 300 -- echo 'localstack up'
