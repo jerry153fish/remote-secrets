@@ -1,4 +1,3 @@
-use aws_sdk_ssm::{Client, Error};
 use aws_smithy_http::endpoint::Endpoint;
 use cached::proc_macro::cached;
 use http::Uri;
@@ -16,15 +15,40 @@ pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
     if use_localstack() {
         ssm_config_builder = ssm_config_builder.endpoint_resolver(localstack_endpoint())
     }
-    Client::from_conf(ssm_config_builder.build())
+    aws_sdk_ssm::Client::from_conf(ssm_config_builder.build())
+}
+
+pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmanager::Client {
+    let mut secretsmanager_config_builder = aws_sdk_secretsmanager::config::Builder::from(conf);
+    if use_localstack() {
+        secretsmanager_config_builder =
+            secretsmanager_config_builder.endpoint_resolver(localstack_endpoint())
+    }
+    aws_sdk_secretsmanager::Client::from_conf(secretsmanager_config_builder.build())
 }
 
 #[cached(time = 60, result = true)]
-pub async fn get_ssm_parameter(name: String) -> Result<String, Error> {
+pub async fn get_ssm_parameter(name: String) -> Result<String, aws_sdk_ssm::Error> {
     let shared_config = aws_config::from_env().load().await;
     let client = ssm_client(&shared_config);
-    let test = client.get_parameter().name(name).send().await.unwrap();
-    let result = test.parameter().unwrap().value().unwrap_or_default();
+    let parmeter = client.get_parameter().name(name).send().await.unwrap();
+    let result = parmeter.parameter().unwrap().value().unwrap_or_default();
+    Ok(result.to_string())
+}
+
+#[cached(time = 60, result = true)]
+pub async fn get_secretsmanager_parameter(
+    name: String,
+) -> Result<String, aws_sdk_secretsmanager::Error> {
+    let shared_config = aws_config::from_env().load().await;
+    let client = secretsmanager_client(&shared_config);
+    let test = client
+        .get_secret_value()
+        .secret_id(name)
+        .send()
+        .await
+        .unwrap();
+    let result = test.secret_string().unwrap_or_default();
     Ok(result.to_string())
 }
 
@@ -38,5 +62,13 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(result, "Vici");
+    }
+
+    #[tokio::test]
+    async fn test_get_secretsmanager_parameter() {
+        let result = get_secretsmanager_parameter("MyTestSecret".to_string())
+            .await
+            .unwrap();
+        assert_eq!(result, "Vicd");
     }
 }
