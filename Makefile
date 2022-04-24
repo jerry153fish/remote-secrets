@@ -54,8 +54,10 @@ test:
 	export TEST_ENV=true && cargo test --all-targets -- --nocapture
 
 init-test:
-	aws ssm put-parameter --endpoint-url http://localhost:4566 --name "MyStringParameter" --type "String" --value "Vici" --overwrite > /dev/null || true
+	mkdir debug || true
+	aws ssm put-parameter --endpoint-url http://localhost:4566 --name MyStringParameter --type "String" --value "Vici" --overwrite > /dev/null || true
 	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyTestSecret --secret-string "Vicd" > /dev/null || true
+	aws cloudformation create-stack --endpoint-url http://localhost:4566 --stack-name MyTestStack --template-body file://e2e/mock-cfn.yaml > debug/create-stack-result.json || true
 
 fmt:
 	#rustup component add rustfmt --toolchain nightly
