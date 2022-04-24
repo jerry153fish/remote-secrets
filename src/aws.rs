@@ -27,6 +27,15 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
     aws_sdk_secretsmanager::Client::from_conf(secretsmanager_config_builder.build())
 }
 
+pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformation::Client {
+    let mut cloudformation_config_builder = aws_sdk_cloudformation::config::Builder::from(conf);
+    if use_localstack() {
+        cloudformation_config_builder =
+            cloudformation_config_builder.endpoint_resolver(localstack_endpoint())
+    }
+    aws_sdk_cloudformation::Client::from_conf(cloudformation_config_builder.build())
+}
+
 #[cached(time = 60, result = true)]
 pub async fn get_ssm_parameter(name: String) -> Result<String, aws_sdk_ssm::Error> {
     let shared_config = aws_config::from_env().load().await;
@@ -42,13 +51,42 @@ pub async fn get_secretsmanager_parameter(
 ) -> Result<String, aws_sdk_secretsmanager::Error> {
     let shared_config = aws_config::from_env().load().await;
     let client = secretsmanager_client(&shared_config);
-    let test = client
+    let output = client
         .get_secret_value()
         .secret_id(name)
         .send()
         .await
         .unwrap();
-    let result = test.secret_string().unwrap_or_default();
+    let result = output.secret_string().unwrap_or_default();
+    Ok(result.to_string())
+}
+
+#[cached(time = 60, result = true)]
+pub async fn get_cloudformation_output(
+    stack_name: String,
+    output_key: String,
+) -> Result<String, aws_sdk_secretsmanager::Error> {
+    let shared_config = aws_config::from_env().load().await;
+    let client = cloudformation_client(&shared_config);
+    let resp = client
+        .describe_stacks()
+        .stack_name(stack_name)
+        .send()
+        .await
+        .unwrap();
+    let result = resp
+        .stacks()
+        .unwrap_or_default()
+        .first()
+        .unwrap()
+        .outputs()
+        .unwrap_or_default()
+        .into_iter()
+        .find(|&o| o.output_key() == Some(&output_key))
+        .unwrap()
+        .output_value()
+        .unwrap_or_default();
+
     Ok(result.to_string())
 }
 
@@ -70,5 +108,14 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(result, "Vicd");
+    }
+
+    #[tokio::test]
+    async fn test_get_cloudformation_stack() {
+        let result = get_cloudformation_output("MyTestStack".to_string(), "S3Bucket".to_string())
+            .await
+            .unwrap();
+
+        assert_eq!(result, "S3Bucket");
     }
 }
