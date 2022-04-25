@@ -1440,6 +1440,7 @@ dependencies = [
  "aws-types",
  "cached",
  "chrono",
+ "futures",
  "http",
  "k8s-openapi",
  "kube",

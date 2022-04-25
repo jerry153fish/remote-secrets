@@ -1,0 +1,94 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: rsecrets.jerry153fish.com
+spec:
+  group: jerry153fish.com
+  names:
+    categories: []
+    kind: RSecret
+    plural: rsecrets
+    shortNames: []
+    singular: rsecret
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns: []
+      name: v1beta1
+      schema:
+        openAPIV3Schema:
+          description: "Auto-generated derived type for RSecretdSpec via `CustomResource`"
+          properties:
+            spec:
+              description: Our Foo custom resource spec
+              properties:
+                description:
+                  nullable: true
+                  type: string
+                resources:
+                  default: []
+                  items:
+                    properties:
+                      backend:
+                        description: Remote backend type
+                        enum:
+                          - SSM
+                          - SecretManager
+                          - Cloudformation
+                          - AppConfig
+                          - Pulumi
+                          - Plaintext
+                        type: string
+                      data:
+                        default: []
+                        description: Secret data configurations
+                        items:
+                          properties:
+                            is_json_string:
+                              description: whether the remote data is jsonstrinified string or not
+                              nullable: true
+                              type: boolean
+                            output_key:
+                              description: output key for cloudformation or pulumi
+                              nullable: true
+                              type: string
+                            remote_name:
+                              description: name for the remote backend for ssm / paramstore / application configuration this is the name or arn for cloudformation and pulumi this is the stack name
+                              type: string
+                            remote_nest_path:
+                              description: nested path for the remote data
+                              nullable: true
+                              type: string
+                            secret_field_name:
+                              description: secret field name
+                              nullable: true
+                              type: string
+                          required:
+                            - remote_name
+                          type: object
+                        type: array
+                      pulumi_token:
+                        description: Pulumi secret for the pulumi backend
+                        nullable: true
+                        type: string
+                    required:
+                      - backend
+                    type: object
+                  type: array
+              type: object
+            status:
+              nullable: true
+              properties:
+                is_bad:
+                  type: boolean
+              required:
+                - is_bad
+              type: object
+          required:
+            - spec
+          title: RSecret
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

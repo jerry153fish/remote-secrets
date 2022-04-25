@@ -22,7 +22,6 @@ use std::{collections::HashMap, sync::Arc};
 )]
 #[kube(status = "RSecretStatus")]
 pub struct RSecretdSpec {
-    name: String,
     #[serde(default)]
     resources: Vec<Backend>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -51,7 +50,8 @@ pub struct SecretData {
     remote_name: String,
 
     /// whether the remote data is jsonstrinified string or not
-    is_json_string: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    is_json_string: Option<bool>,
 
     /// nested path for the remote data
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -60,6 +60,10 @@ pub struct SecretData {
     /// secret field name
     #[serde(skip_serializing_if = "Option::is_none")]
     secret_field_name: Option<String>,
+
+    /// output key for cloudformation or pulumi
+    #[serde(skip_serializing_if = "Option::is_none")]
+    output_key: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
