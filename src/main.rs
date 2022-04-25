@@ -1,10 +1,4 @@
-use futures::StreamExt;
-use kube::{
-    api::{Api, ListParams, ResourceExt},
-    runtime::controller::{Action, Context, Controller},
-    Client,
-};
-use log::{error, info, warn, LevelFilter};
+use log::{info, warn, LevelFilter};
 use log4rs::{
     append::console::ConsoleAppender,
     config::{Appender, Root},
@@ -17,15 +11,22 @@ use actix_web::{
     App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 
-use std::sync::Arc;
-
-use tokio::time::Duration;
+use prometheus::{Encoder, TextEncoder};
 
 pub use controller::*;
 
 #[get("/health")]
 async fn health(_: HttpRequest) -> impl Responder {
     HttpResponse::Ok().json("healthy")
+}
+
+#[get("/metrics")]
+async fn metrics(c: Data<Manager>, _req: HttpRequest) -> impl Responder {
+    let metrics = c.metrics();
+    let encoder = TextEncoder::new();
+    let mut buffer = vec![];
+    encoder.encode(&metrics, &mut buffer).unwrap();
+    HttpResponse::Ok().body(buffer)
 }
 
 #[tokio::main]
@@ -38,8 +39,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Infer the runtime environment and try to create a Kubernetes Client
     let server = HttpServer::new(move || {
         App::new()
+            .app_data(Data::new(manager.clone()))
             .wrap(middleware::Logger::default().exclude("/health"))
             .service(health)
+            .service(metrics)
     })
     .bind("0.0.0.0:8080")
     .expect("Can not bind to 0.0.0.0:8080")
