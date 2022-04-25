@@ -4,6 +4,12 @@ use kube::{
     runtime::controller::{Action, Context, Controller},
     Client,
 };
+use log::{error, info, LevelFilter};
+use log4rs::{
+    append::console::ConsoleAppender,
+    config::{Appender, Root},
+    encode::json::JsonEncoder,
+};
 use std::sync::Arc;
 
 use tokio::time::Duration;
@@ -12,6 +18,8 @@ use controller::RSecret;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    init_log();
+    info!("Starting controller");
     // Infer the runtime environment and try to create a Kubernetes Client
     let client = Client::try_default()
         .await
@@ -20,7 +28,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Preparation of resources used by the `kube_runtime::Controller`
     let rsecrets: Api<RSecret> = Api::all(client.clone());
     for p in rsecrets.list(&ListParams::default()).await? {
-        println!("found {:?}", p);
+        info!("found {:?}", p);
     }
 
     let context: Context<ContextData> = Context::new(ContextData::new(client.clone()));
@@ -30,16 +38,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .for_each(|reconciliation_result| async move {
             match reconciliation_result {
                 Ok(echo_resource) => {
-                    println!("Reconciliation successful. Resource: {:?}", echo_resource);
+                    info!("Reconciliation successful. Resource: {:?}", echo_resource);
                 }
                 Err(reconciliation_err) => {
-                    eprintln!("Reconciliation error: {:?}", reconciliation_err)
+                    error!("Reconciliation error: {:?}", reconciliation_err)
                 }
             }
         })
         .await;
 
     Ok(())
+}
+
+fn init_log() {
+    let stdout: ConsoleAppender = ConsoleAppender::builder()
+        .encoder(Box::new(JsonEncoder::new()))
+        .build();
+    let log_config = log4rs::config::Config::builder()
+        .appender(Appender::builder().build("stdout", Box::new(stdout)))
+        .build(Root::builder().appender("stdout").build(LevelFilter::Info))
+        .unwrap();
+    log4rs::init_config(log_config).unwrap();
 }
 
 async fn reconcile(echo: Arc<RSecret>, context: Context<ContextData>) -> Result<Action, Error> {
@@ -65,7 +84,7 @@ async fn reconcile(echo: Arc<RSecret>, context: Context<ContextData>) -> Result<
 }
 
 fn on_error(error: &Error, _context: Context<ContextData>) -> Action {
-    eprintln!("Reconciliation error:\n{:?}", error);
+    error!("Reconciliation error:\n{:?}", error);
     Action::requeue(Duration::from_secs(5))
 }
 
