@@ -18,30 +18,31 @@ use tokio::{
     time::{Duration, Instant},
 };
 
-use crate::{Error, RSecret};
+use prometheus::{default_registry, proto::MetricFamily};
 
-async fn reconcile(echo: Arc<RSecret>, context: Context<ContextData>) -> Result<Action, Error> {
+use log::{info, warn, LevelFilter};
+
+use crate::{Error, Metrics, RSecret};
+
+async fn reconcile(rsecret: Arc<RSecret>, context: Context<ContextData>) -> Result<Action, Error> {
     Ok(Action::requeue(Duration::from_secs(10)))
 }
 
 fn error_policy(error: &Error, ctx: Context<ContextData>) -> Action {
+    warn!("reconcile failed: {:?}", error);
+    ctx.get_ref().metrics.failures.inc();
     Action::requeue(Duration::from_secs(5 * 60))
 }
 
-struct ContextData {
+#[derive(Clone)]
+pub struct ContextData {
     /// Kubernetes client to make Kubernetes API requests with. Required for K8S resource management.
     client: Client,
-}
 
-impl ContextData {
-    /// Constructs a new instance of ContextData.
-    ///
-    /// # Arguments:
-    /// - `client`: A Kubernetes client to make Kubernetes REST API requests with. Resources
-    /// will be created and deleted with this client.
-    pub fn new(client: Client) -> Self {
-        ContextData { client }
-    }
+    state: Arc<RwLock<State>>,
+
+    /// Various prometheus metrics
+    metrics: Metrics,
 }
 
 /// In-memory reconciler state exposed on /
@@ -80,8 +81,11 @@ impl Manager {
             .expect("Expected a valid KUBECONFIG environment variable.");
 
         let state = Arc::new(RwLock::new(State::new()));
+        let metrics = Metrics::new();
         let context = Context::new(ContextData {
             client: client.clone(),
+            metrics: metrics.clone(),
+            state: state.clone(),
         });
 
         // Preparation of resources used by the `kube_runtime::Controller`
@@ -100,6 +104,11 @@ impl Manager {
             .boxed();
 
         (Self { state }, drainer)
+    }
+
+    /// Metrics getter
+    pub fn metrics(&self) -> Vec<MetricFamily> {
+        default_registry().gather()
     }
 
     /// State getter
