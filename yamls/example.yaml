@@ -1,0 +1,12 @@
+apiVersion: jerry153fish.com/v1beta1
+kind: RSecret # Identifier of the resource type.
+metadata:
+  name: test-rsecret # Name of the "Echo" custom resource instance, may be changed to your liking
+  namespace: default # Namespace must exist and account in KUBECONFIG must have sufficient permissions
+spec:
+  description: "test rsecret" # Optional description of the resource
+  resources:
+    - backend: SSM
+      data:
+        - remote_name: test-rsecret-ssm-param
+          secret_field_name: test-rsecret-ssm-param
