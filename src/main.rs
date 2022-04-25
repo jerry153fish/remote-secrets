@@ -4,48 +4,51 @@ use kube::{
     runtime::controller::{Action, Context, Controller},
     Client,
 };
-use log::{error, info, LevelFilter};
+use log::{error, info, warn, LevelFilter};
 use log4rs::{
     append::console::ConsoleAppender,
     config::{Appender, Root},
     encode::json::JsonEncoder,
 };
+
+use actix_web::{
+    get, middleware,
+    web::{self, Data},
+    App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
+
 use std::sync::Arc;
 
 use tokio::time::Duration;
 
-use controller::RSecret;
+pub use controller::*;
+
+#[get("/health")]
+async fn health(_: HttpRequest) -> impl Responder {
+    HttpResponse::Ok().json("healthy")
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     init_log();
     info!("Starting controller");
+
+    let (manager, drainer) = Manager::new().await;
+
     // Infer the runtime environment and try to create a Kubernetes Client
-    let client = Client::try_default()
-        .await
-        .expect("Expected a valid KUBECONFIG environment variable.");
+    let server = HttpServer::new(move || {
+        App::new()
+            .wrap(middleware::Logger::default().exclude("/health"))
+            .service(health)
+    })
+    .bind("0.0.0.0:8080")
+    .expect("Can not bind to 0.0.0.0:8080")
+    .shutdown_timeout(5);
 
-    // Preparation of resources used by the `kube_runtime::Controller`
-    let rsecrets: Api<RSecret> = Api::all(client.clone());
-    for p in rsecrets.list(&ListParams::default()).await? {
-        info!("found {:?}", p);
+    tokio::select! {
+        _ = drainer => warn!("controller drained"),
+        _ = server.run() => info!("actix exited"),
     }
-
-    let context: Context<ContextData> = Context::new(ContextData::new(client.clone()));
-
-    Controller::new(rsecrets.clone(), ListParams::default())
-        .run(reconcile, on_error, context)
-        .for_each(|reconciliation_result| async move {
-            match reconciliation_result {
-                Ok(echo_resource) => {
-                    info!("Reconciliation successful. Resource: {:?}", echo_resource);
-                }
-                Err(reconciliation_err) => {
-                    error!("Reconciliation error: {:?}", reconciliation_err)
-                }
-            }
-        })
-        .await;
 
     Ok(())
 }
@@ -59,70 +62,4 @@ fn init_log() {
         .build(Root::builder().appender("stdout").build(LevelFilter::Info))
         .unwrap();
     log4rs::init_config(log_config).unwrap();
-}
-
-async fn reconcile(echo: Arc<RSecret>, context: Context<ContextData>) -> Result<Action, Error> {
-    let client: Client = context.get_ref().client.clone(); // The `Client` is shared -> a clone from the reference is obtained
-
-    // The resource of `Echo` kind is required to have a namespace set. However, it is not guaranteed
-    // the resource will have a `namespace` set. Therefore, the `namespace` field on object's metadata
-    // is optional and Rust forces the programmer to check for it's existence first.
-    let namespace: String = match echo.namespace() {
-        None => {
-            // If there is no namespace to deploy to defined, reconciliation ends with an error immediately.
-            return Err(Error::UserInputError(
-                "Expected Echo resource to be namespaced. Can't deploy to an unknown namespace."
-                    .to_owned(),
-            ));
-        }
-        // If namespace is known, proceed. In a more advanced version of the operator, perhaps
-        // the namespace could be checked for existence first.
-        Some(namespace) => namespace,
-    };
-
-    Ok(Action::requeue(Duration::from_secs(10)))
-}
-
-fn on_error(error: &Error, _context: Context<ContextData>) -> Action {
-    error!("Reconciliation error:\n{:?}", error);
-    Action::requeue(Duration::from_secs(5))
-}
-
-/// All errors possible to occur during reconciliation
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    /// Any error originating from the `kube-rs` crate
-    #[error("Kubernetes reported error: {source}")]
-    KubeError {
-        #[from]
-        source: kube::Error,
-    },
-    /// Error in user input or RSecret resource definition, typically missing fields.
-    #[error("Invalid RSecret CRD: {0}")]
-    UserInputError(String),
-}
-
-/// Context injected with each `reconcile` and `on_error` method invocation.
-struct ContextData {
-    /// Kubernetes client to make Kubernetes API requests with. Required for K8S resource management.
-    client: Client,
-}
-
-impl ContextData {
-    /// Constructs a new instance of ContextData.
-    ///
-    /// # Arguments:
-    /// - `client`: A Kubernetes client to make Kubernetes REST API requests with. Resources
-    /// will be created and deleted with this client.
-    pub fn new(client: Client) -> Self {
-        ContextData { client }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }

@@ -19,3 +19,5 @@ pub mod crd;
 pub use crd::RSecret;
 
 pub mod aws;
+pub mod manager;
+pub use manager::Manager;
