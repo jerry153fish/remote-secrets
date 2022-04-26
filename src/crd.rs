@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{collections::HashMap, sync::Arc};
 
-/// Our Foo custom resource spec
+/// Our RSecret custom resource spec
 #[derive(CustomResource, Deserialize, Serialize, Clone, Debug, JsonSchema)]
 #[kube(
     kind = "RSecret",
@@ -24,23 +24,23 @@ use std::{collections::HashMap, sync::Arc};
 #[kube(status = "RSecretStatus")]
 pub struct RSecretdSpec {
     #[serde(default)]
-    resources: Vec<Backend>,
+    pub resources: Vec<Backend>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<String>,
+    pub description: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
 pub struct Backend {
     /// Remote backend type
-    backend: BackendType,
+    pub backend: BackendType,
 
     /// Secret data configurations
     #[serde(default)]
-    data: Vec<SecretData>,
+    pub data: Vec<SecretData>,
 
     /// Pulumi secret for the pulumi backend
     #[serde(skip_serializing_if = "Option::is_none")]
-    pulumi_token: Option<String>,
+    pub pulumi_token: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
@@ -49,27 +49,27 @@ pub struct SecretData {
     /// for ssm / paramstore / application configuration this is the name or arn
     /// for cloudformation and pulumi this is the stack name
     /// for plaintext this is the value of the secret
-    name_or_value: String,
+    pub name_or_value: String,
 
     /// whether the remote data is jsonstrinified string or not
     #[serde(skip_serializing_if = "Option::is_none")]
-    is_json_string: Option<bool>,
+    pub is_json_string: Option<bool>,
 
     /// nested path for the remote data
     #[serde(skip_serializing_if = "Option::is_none")]
-    remote_nest_path: Option<String>,
+    pub remote_nest_path: Option<String>,
 
     /// secret field name
     #[serde(skip_serializing_if = "Option::is_none")]
-    secret_field_name: Option<String>,
+    pub secret_field_name: Option<String>,
 
     /// output key for cloudformation or pulumi
     #[serde(skip_serializing_if = "Option::is_none")]
-    output_key: Option<String>,
+    pub output_key: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
-enum BackendType {
+pub enum BackendType {
     SSM,
     SecretManager,
     Cloudformation,
