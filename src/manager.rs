@@ -23,11 +23,14 @@ use prometheus::{default_registry, labels, proto::MetricFamily};
 
 use log::{info, warn, LevelFilter};
 
-use crate::{Error, Metrics, RSecret, RSecretStatus};
+use crate::{finalizer, Metrics, RSecret, RSecretStatus};
 
 use std::collections::BTreeMap;
 
-async fn reconcile(rsecret: Arc<RSecret>, ctx: Context<ContextData>) -> Result<Action, Error> {
+async fn reconcile(
+    rsecret: Arc<RSecret>,
+    ctx: Context<ContextData>,
+) -> Result<Action, kube::Error> {
     let start = Instant::now();
     ctx.get_ref().metrics.reconciliations.inc();
 
@@ -38,31 +41,9 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Context<ContextData>) -> Result<A
 
     let rs = rsecret.as_ref().clone();
 
-    info!("Reconciling rsecret {} in namespace {}", name, ns);
-    let k8s_secrets: Api<Secret> = Api::namespaced(client.clone(), &ns);
-    let secret = k8s_secrets.get(&name).await;
-
-    match secret {
-        Ok(secret) => {
-            // let mut state = ctx.get_ref().state.write().await;
-            // state.secrets.insert(name.to_owned(), secret.clone());
-            info!("Error getting secret {}: {:?}", name, secret);
-        }
-        Err(e) => {
-            if (e.to_string().contains("NotFound")) {
-                warn!("Error getting secret {}: {}", name, e);
-                let result = create_k8s_secret(client, rs).await;
-                match result {
-                    Ok(_) => {
-                        info!("Created secret {}", name);
-                    }
-                    Err(e) => {
-                        warn!("Error creating secret {}: {}", name, e);
-                    }
-                }
-            }
-        }
-    }
+    // info!("Reconciling rsecret {} in namespace {}", name, ns);
+    // let k8s_secrets: Api<Secret> = Api::namespaced(client.clone(), &ns);
+    // let secret = k8s_secrets.get(&name).await;
 
     let duration = start.elapsed().as_millis() as f64 / 1000.0;
     ctx.get_ref()
@@ -71,7 +52,48 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Context<ContextData>) -> Result<A
         .with_label_values(&[])
         .observe(duration);
 
-    Ok(Action::requeue(Duration::from_secs(10)))
+    // Performs action as decided by the `determine_action` function.
+    return match determine_action(&rsecret) {
+        RSecretAction::Create => {
+            finalizer::add(client.clone(), &name, &ns).await?;
+
+            create_k8s_secret(client.clone(), rs).await?;
+            Ok(Action::requeue(Duration::from_secs(10)))
+        }
+        RSecretAction::Delete => {
+            delete_k8s_secret(client.clone(), &name, &ns).await?;
+
+            finalizer::delete(client.clone(), &rsecret.name(), &ns).await?;
+            Ok(Action::await_change())
+        }
+
+        RSecretAction::NoOp => Ok(Action::requeue(Duration::from_secs(10))),
+    };
+}
+
+/// Action to be taken upon an `Echo` resource during reconciliation
+enum RSecretAction {
+    /// Create the subresources, this includes spawning `n` pods with Echo service
+    Create,
+    /// Delete all subresources created in the `Create` phase
+    Delete,
+    /// This `Echo` resource is in desired state and requires no actions to be taken
+    NoOp,
+}
+
+fn determine_action(rsecret: &RSecret) -> RSecretAction {
+    return if rsecret.meta().deletion_timestamp.is_some() {
+        RSecretAction::Delete
+    } else if rsecret
+        .meta()
+        .finalizers
+        .as_ref()
+        .map_or(true, |finalizers| finalizers.is_empty())
+    {
+        RSecretAction::Create
+    } else {
+        RSecretAction::NoOp
+    };
 }
 
 async fn create_k8s_secret(client: Client, rsecret: RSecret) -> Result<Secret, kube::Error> {
@@ -103,7 +125,17 @@ async fn create_k8s_secret(client: Client, rsecret: RSecret) -> Result<Secret, k
         .await
 }
 
-fn error_policy(error: &Error, ctx: Context<ContextData>) -> Action {
+pub async fn delete_k8s_secret(
+    client: Client,
+    name: &str,
+    namespace: &str,
+) -> Result<(), kube::Error> {
+    let api: Api<Secret> = Api::namespaced(client, namespace);
+    api.delete(name, &DeleteParams::default()).await?;
+    Ok(())
+}
+
+fn error_policy(error: &kube::Error, ctx: Context<ContextData>) -> Action {
     warn!("reconcile failed: {:?}", error);
     ctx.get_ref().metrics.failures.inc();
     Action::requeue(Duration::from_secs(5 * 60))

@@ -28,3 +28,5 @@ pub use manager::Manager;
 /// metrics
 pub mod metrics;
 pub use metrics::Metrics;
+
+pub mod finalizer;
