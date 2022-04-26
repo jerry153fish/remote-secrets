@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 use kube::{
     api::{Api, ListParams, Patch, PatchParams, ResourceExt},
     client::Client,
@@ -47,7 +48,8 @@ pub struct SecretData {
     /// name for the remote backend
     /// for ssm / paramstore / application configuration this is the name or arn
     /// for cloudformation and pulumi this is the stack name
-    remote_name: String,
+    /// for plaintext this is the value of the secret
+    name_or_value: String,
 
     /// whether the remote data is jsonstrinified string or not
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -78,6 +80,5 @@ enum BackendType {
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
 pub struct RSecretStatus {
-    is_bad: bool,
-    //last_updated: Option<DateTime<Utc>>,
+    pub last_updated: Option<DateTime<Utc>>,
 }

@@ -8,5 +8,9 @@ spec:
   resources:
     - backend: SSM
       data:
-        - remote_name: test-rsecret-ssm-param
+        - name_or_value: test-rsecret-ssm-param
           secret_field_name: test-rsecret-ssm-param
+    - backend: Plaintext
+      data:
+        - name_or_value: test-rsecret-plaintext-value
+          secret_field_name: test-rsecret-plaintext
