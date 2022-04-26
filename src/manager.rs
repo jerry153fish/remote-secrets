@@ -23,7 +23,7 @@ use prometheus::{default_registry, labels, proto::MetricFamily};
 
 use log::{info, warn, LevelFilter};
 
-use crate::{finalizer, Metrics, RSecret, RSecretStatus};
+use crate::{backend, finalizer, Metrics, RSecret, RSecretStatus};
 
 use std::collections::BTreeMap;
 
@@ -67,18 +67,14 @@ async fn reconcile(
             Ok(Action::await_change())
         }
 
-        RSecretAction::NoOp => Ok(Action::requeue(Duration::from_secs(10))),
+        RSecretAction::Update => Ok(Action::requeue(Duration::from_secs(10))),
     };
 }
 
-/// Action to be taken upon an `Echo` resource during reconciliation
 enum RSecretAction {
-    /// Create the subresources, this includes spawning `n` pods with Echo service
     Create,
-    /// Delete all subresources created in the `Create` phase
     Delete,
-    /// This `Echo` resource is in desired state and requires no actions to be taken
-    NoOp,
+    Update,
 }
 
 fn determine_action(rsecret: &RSecret) -> RSecretAction {
@@ -92,7 +88,7 @@ fn determine_action(rsecret: &RSecret) -> RSecretAction {
     {
         RSecretAction::Create
     } else {
-        RSecretAction::NoOp
+        RSecretAction::Update
     };
 }
 
@@ -100,11 +96,11 @@ async fn create_k8s_secret(client: Client, rsecret: RSecret) -> Result<Secret, k
     let name = rsecret.metadata.name.clone().unwrap_or_default();
     let ns = rsecret.metadata.namespace.clone().unwrap_or_default();
     let mut labels: BTreeMap<String, String> = BTreeMap::new();
-    labels.insert("app".to_owned(), name.to_owned());
+    labels.insert("app".to_owned(), name.clone());
 
     let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
 
-    data.insert("test".to_owned(), ByteString("test".as_bytes().to_vec()));
+    data = backend::get_secret_data(&rsecret, data).await;
 
     let k8s_secret: Secret = Secret {
         metadata: ObjectMeta {

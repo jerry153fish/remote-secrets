@@ -20,7 +20,7 @@ spec:
           description: "Auto-generated derived type for RSecretdSpec via `CustomResource`"
           properties:
             spec:
-              description: Our Foo custom resource spec
+              description: Our RSecret custom resource spec
               properties:
                 description:
                   nullable: true
