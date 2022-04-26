@@ -48,12 +48,12 @@ spec:
                               description: whether the remote data is jsonstrinified string or not
                               nullable: true
                               type: boolean
+                            name_or_value:
+                              description: name for the remote backend for ssm / paramstore / application configuration this is the name or arn for cloudformation and pulumi this is the stack name for plaintext this is the value of the secret
+                              type: string
                             output_key:
                               description: output key for cloudformation or pulumi
                               nullable: true
-                              type: string
-                            remote_name:
-                              description: name for the remote backend for ssm / paramstore / application configuration this is the name or arn for cloudformation and pulumi this is the stack name
                               type: string
                             remote_nest_path:
                               description: nested path for the remote data
@@ -64,7 +64,7 @@ spec:
                               nullable: true
                               type: string
                           required:
-                            - remote_name
+                            - name_or_value
                           type: object
                         type: array
                       pulumi_token:
@@ -79,10 +79,10 @@ spec:
             status:
               nullable: true
               properties:
-                is_bad:
-                  type: boolean
-              required:
-                - is_bad
+                last_updated:
+                  format: date-time
+                  nullable: true
+                  type: string
               type: object
           required:
             - spec

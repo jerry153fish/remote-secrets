@@ -17,6 +17,7 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 /// Generated type, for crdgen
 pub mod crd;
 pub use crd::RSecret;
+pub use crd::RSecretStatus;
 
 pub mod aws;
 

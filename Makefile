@@ -45,7 +45,7 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 crdgen:
-	cargo run --bin crdgen
+	cargo run --bin crdgen > yamls/crd.yaml
 
 controller:
 	cargo run --bin controller
@@ -60,8 +60,10 @@ init-test:
 	aws cloudformation create-stack --endpoint-url http://localhost:4566 --stack-name MyTestStack --template-body file://e2e/mock-cfn.yaml > debug/create-stack-result.json || true
 
 fmt:
-	#rustup component add rustfmt --toolchain nightly
-	rustfmt --edition 2021 $$(find . -type f -iname *.rs)
+	cargo fmt --all
 
 doc:
 	cargo doc
+
+install: crdgen
+	kubectl apply -f yamls/crd.yaml
