@@ -31,5 +31,5 @@ pub use manager::Manager;
 pub mod metrics;
 pub use metrics::Metrics;
 
-pub mod backend;
-pub mod finalizer;
+pub mod rsecret;
+pub mod web;
