@@ -1,5 +1,8 @@
 use crate::{
-    aws::{self, get_plain_text_secret_data, get_secret_manager_secret_data, get_ssm_secret_data},
+    aws::{
+        self, get_cloudformation_stack_secret_data, get_plain_text_secret_data,
+        get_secret_manager_secret_data, get_ssm_secret_data,
+    },
     Backend, BackendType, Metrics, RSecret,
 };
 
@@ -39,6 +42,13 @@ pub async fn get_secret_data(
             BackendType::SSM => {
                 let aws_ssm_data = get_ssm_secret_data(backend).await.unwrap();
                 secrets = aws_ssm_data
+                    .into_iter()
+                    .chain(secrets.clone().into_iter())
+                    .collect();
+            }
+            BackendType::Cloudformation => {
+                let aws_cfn_data = get_cloudformation_stack_secret_data(backend).await.unwrap();
+                secrets = aws_cfn_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())
                     .collect();
