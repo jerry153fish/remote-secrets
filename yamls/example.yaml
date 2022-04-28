@@ -10,6 +10,8 @@ spec:
       data:
         - name_or_value: MyStringParameter
           secret_field_name: test-rsecret-ssm-param
+        - name_or_value: MyStringParameter
+          secret_field_name: test-rsecret-ssm-param1
     - backend: Plaintext
       data:
         - name_or_value: test-rsecret-plaintext-value

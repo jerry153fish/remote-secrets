@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use aws_smithy_http::endpoint::Endpoint;
 use cached::proc_macro::cached;
 use http::Uri;
@@ -7,7 +9,8 @@ pub fn use_localstack() -> bool {
 }
 
 pub fn localstack_endpoint() -> Endpoint {
-    Endpoint::immutable(Uri::from_static("http://localhost:4566/"))
+    let url = std::env::var("LOCALSTACK_URL").unwrap_or("http://localhost:4566/".to_string());
+    Endpoint::immutable(Uri::from_str(&url).unwrap())
 }
 
 pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {

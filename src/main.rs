@@ -6,9 +6,7 @@ use log4rs::{
 };
 
 use actix_web::{
-    get, middleware,
-    web::{self, Data},
-    App, HttpRequest, HttpResponse, HttpServer, Responder,
+    get, middleware, web::Data, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 
 use prometheus::{Encoder, TextEncoder};

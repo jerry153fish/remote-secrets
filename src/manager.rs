@@ -19,6 +19,11 @@ use tokio::{
     time::{Duration, Instant},
 };
 
+use serde_json::{Map, Value};
+
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
 use prometheus::{default_registry, labels, proto::MetricFamily};
 
 use log::{info, warn, LevelFilter};
@@ -41,10 +46,6 @@ async fn reconcile(
 
     let rs = rsecret.as_ref().clone();
 
-    // info!("Reconciling rsecret {} in namespace {}", name, ns);
-    // let k8s_secrets: Api<Secret> = Api::namespaced(client.clone(), &ns);
-    // let secret = k8s_secrets.get(&name).await;
-
     let duration = start.elapsed().as_millis() as f64 / 1000.0;
     ctx.get_ref()
         .metrics
@@ -57,7 +58,7 @@ async fn reconcile(
         RSecretAction::Create => {
             finalizer::add(client.clone(), &name, &ns).await?;
 
-            create_k8s_secret(client.clone(), rs).await?;
+            create_k8s_secret(client.clone(), &rs).await?;
             Ok(Action::requeue(Duration::from_secs(10)))
         }
         RSecretAction::Delete => {
@@ -67,7 +68,34 @@ async fn reconcile(
             Ok(Action::await_change())
         }
 
-        RSecretAction::Update => Ok(Action::requeue(Duration::from_secs(10))),
+        RSecretAction::Update => {
+            info!("Updating rsecret {} in namespace {}", name, ns);
+            let k8s_secrets: Api<Secret> = Api::namespaced(client.clone(), &ns);
+            let secret = k8s_secrets.get(&name).await?;
+            let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
+
+            data = backend::get_secret_data(&rsecret, data).await;
+
+            let data_string = serde_json::to_string(&data).unwrap();
+
+            let new_hash_id = calculate_hash(&data_string);
+
+            let old_hash_id = secret
+                .meta()
+                .labels
+                .as_ref()
+                .unwrap()
+                .get("hash_id")
+                .unwrap();
+            if new_hash_id.to_string().eq(old_hash_id) {
+                info!("No changes to rsecret {} in namespace {}", name, ns);
+            } else {
+                info!("Updating rsecret {} in namespace {}", name, ns);
+                update_k8s_secret(client.clone(), &rs, data_string.clone()).await?;
+            }
+
+            Ok(Action::requeue(Duration::from_secs(10)))
+        }
     };
 }
 
@@ -92,15 +120,26 @@ fn determine_action(rsecret: &RSecret) -> RSecretAction {
     };
 }
 
-async fn create_k8s_secret(client: Client, rsecret: RSecret) -> Result<Secret, kube::Error> {
+async fn create_k8s_secret(client: Client, rsecret: &RSecret) -> Result<Secret, kube::Error> {
     let name = rsecret.metadata.name.clone().unwrap_or_default();
-    let ns = rsecret.metadata.namespace.clone().unwrap_or_default();
+    let ns = rsecret
+        .metadata
+        .namespace
+        .clone()
+        .unwrap_or("default".to_owned());
+
     let mut labels: BTreeMap<String, String> = BTreeMap::new();
-    labels.insert("app".to_owned(), name.clone());
 
     let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
 
     data = backend::get_secret_data(&rsecret, data).await;
+
+    let data_string = serde_json::to_string(&data).unwrap();
+
+    let hash_id = calculate_hash(&data_string);
+
+    labels.insert("app".to_owned(), name.clone());
+    labels.insert("hash_id".to_owned(), hash_id.to_string());
 
     let k8s_secret: Secret = Secret {
         metadata: ObjectMeta {
@@ -121,6 +160,40 @@ async fn create_k8s_secret(client: Client, rsecret: RSecret) -> Result<Secret, k
         .await
 }
 
+async fn update_k8s_secret(
+    client: Client,
+    rsecret: &RSecret,
+    data_string: String,
+) -> Result<Secret, kube::Error> {
+    let name = rsecret.metadata.name.clone().unwrap_or_default();
+    let ns = rsecret
+        .metadata
+        .namespace
+        .clone()
+        .unwrap_or("default".to_owned());
+
+    let hash_id = calculate_hash(&data_string);
+
+    let data_value = serde_json::from_str::<Value>(&data_string).unwrap();
+
+    let secret_patch_value = json!({
+        "metadata": {
+            "labels": {
+                "hash_id": hash_id.to_string()
+            }
+        },
+        "data": data_value
+    });
+
+    let patch: Patch<&Value> = Patch::Merge(&secret_patch_value);
+
+    let k8s_secret_api: Api<Secret> = Api::namespaced(client.clone(), &ns);
+
+    Ok(k8s_secret_api
+        .patch(&name, &PatchParams::default(), &patch)
+        .await?)
+}
+
 pub async fn delete_k8s_secret(
     client: Client,
     name: &str,
@@ -129,6 +202,12 @@ pub async fn delete_k8s_secret(
     let api: Api<Secret> = Api::namespaced(client, namespace);
     api.delete(name, &DeleteParams::default()).await?;
     Ok(())
+}
+
+pub fn calculate_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }
 
 fn error_policy(error: &kube::Error, ctx: Context<ContextData>) -> Action {
