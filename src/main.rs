@@ -5,27 +5,9 @@ use log4rs::{
     encode::json::JsonEncoder,
 };
 
-use actix_web::{
-    get, middleware, web::Data, App, HttpRequest, HttpResponse, HttpServer, Responder,
-};
-
-use prometheus::{Encoder, TextEncoder};
+use actix_web::{middleware, web::Data, App, HttpServer};
 
 pub use controller::*;
-
-#[get("/health")]
-async fn health(_: HttpRequest) -> impl Responder {
-    HttpResponse::Ok().json("healthy")
-}
-
-#[get("/metrics")]
-async fn metrics(c: Data<Manager>, _req: HttpRequest) -> impl Responder {
-    let metrics = c.metrics();
-    let encoder = TextEncoder::new();
-    let mut buffer = vec![];
-    encoder.encode(&metrics, &mut buffer).unwrap();
-    HttpResponse::Ok().body(buffer)
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,8 +21,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         App::new()
             .app_data(Data::new(manager.clone()))
             .wrap(middleware::Logger::default().exclude("/health"))
-            .service(health)
-            .service(metrics)
+            .service(web::health)
+            .service(web::metrics)
     })
     .bind("0.0.0.0:8080")
     .expect("Can not bind to 0.0.0.0:8080")
