@@ -2,6 +2,7 @@ use std::{collections::BTreeMap, str::FromStr};
 
 use aws_smithy_http::endpoint::Endpoint;
 use cached::proc_macro::cached;
+use futures::future::ok;
 use http::Uri;
 use k8s_openapi::ByteString;
 
@@ -115,6 +116,27 @@ pub async fn get_cloudformation_output(
     Ok(result.to_string())
 }
 
+// get the secret data from the whole outputs of the cloudformation stack
+pub async fn get_cloudformation_outputs_as_secret_data(
+    stack_name: String,
+) -> Result<BTreeMap<String, ByteString>, aws_sdk_cloudformation::Error> {
+    let outputs = get_cloudformation_outputs(stack_name).await?;
+    let mut secrets = BTreeMap::new();
+    for output in outputs {
+        let output_key = output.output_key().unwrap_or_default().to_owned();
+        let output_value = ByteString(
+            output
+                .output_value()
+                .unwrap_or_default()
+                .as_bytes()
+                .to_vec(),
+        );
+        secrets.insert(output_key, output_value);
+    }
+
+    Ok(secrets)
+}
+
 /// convert the plain text backend data to k8s secret data
 pub fn get_plain_text_secret_data(backend: &Backend) -> BTreeMap<String, ByteString> {
     let mut secrets = BTreeMap::new();
@@ -146,6 +168,57 @@ pub async fn get_secret_manager_secret_data(
             match ssm_secret_data {
                 Ok(ssm_secret_data) => {
                     secrets.insert(key, ByteString(ssm_secret_data.clone().into_bytes()));
+                }
+                Err(err) => {
+                    log::error!("{}", err);
+                }
+            }
+        }
+    }
+
+    Ok(secrets)
+}
+
+/// convert the secret manager data to k8s secret data
+pub async fn get_cloudformation_stack_secret_data(
+    backend: &Backend,
+) -> Result<BTreeMap<String, ByteString>, aws_sdk_secretsmanager::Error> {
+    let mut secrets = BTreeMap::new();
+
+    for secret_data in backend.data.iter() {
+        // specific the output value for 1-1 mapping k8s secret key
+        // TODO: support the output value is not dict
+        if secret_data.secret_field_name.is_some() && secret_data.output_key.is_some() {
+            let cloudformation_secret_data = get_cloudformation_output(
+                secret_data.name_or_value.clone(),
+                secret_data.output_key.clone().unwrap(),
+            )
+            .await;
+
+            let key = secret_data.secret_field_name.clone().unwrap();
+
+            match cloudformation_secret_data {
+                Ok(cloudformation_secret_data) => {
+                    secrets.insert(
+                        key,
+                        ByteString(cloudformation_secret_data.clone().into_bytes()),
+                    );
+                }
+                Err(err) => {
+                    log::error!("{}", err);
+                }
+            }
+        } else {
+            // insert the whole cloudformation outputs into k8s secret data
+            let cloudformation_secret_data =
+                get_cloudformation_outputs_as_secret_data(secret_data.name_or_value.clone()).await;
+
+            match cloudformation_secret_data {
+                Ok(cloudformation_secret_data) => {
+                    secrets = cloudformation_secret_data
+                        .into_iter()
+                        .chain(secrets.clone().into_iter())
+                        .collect();
                 }
                 Err(err) => {
                     log::error!("{}", err);
@@ -210,5 +283,16 @@ mod tests {
             .unwrap();
 
         assert_eq!(result, "S3Bucket");
+    }
+
+    #[tokio::test]
+    async fn test_get_cloudformation_outputs() {
+        let result = get_cloudformation_outputs_as_secret_data("MyTestStack".to_string())
+            .await
+            .unwrap();
+
+        let data_string = serde_json::to_string(&result).unwrap();
+
+        assert_eq!(data_string.contains("UzNCdWNrZXQ"), true);
     }
 }
