@@ -46,9 +46,10 @@ pub struct Backend {
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
 pub struct SecretData {
     /// name for the remote backend
-    /// for ssm / paramstore / application configuration this is the name or arn
+    /// for ssm / paramstore this is the name or arn
     /// for cloudformation and pulumi this is the stack name
     /// for plaintext this is the value of the secret
+    /// appconfig this is the application id
     pub name_or_value: String,
 
     /// whether the remote data is jsonstrinified string or not
@@ -66,6 +67,14 @@ pub struct SecretData {
     /// output key for cloudformation or pulumi
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output_key: Option<String>,
+
+    /// configuration profile id for appconfig
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub configuration_profile_id: Option<String>,
+
+    /// version number for the Hosted configuration versions for appconfig
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version_number: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]

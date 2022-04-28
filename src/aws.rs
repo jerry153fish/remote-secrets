@@ -51,6 +51,41 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
     aws_sdk_cloudformation::Client::from_conf(cloudformation_config_builder.build())
 }
 
+/// get the cloudformation client
+pub fn appconfig_client(conf: &aws_types::SdkConfig) -> aws_sdk_appconfig::Client {
+    let mut appconfig_config_builder = aws_sdk_appconfig::config::Builder::from(conf);
+
+    aws_sdk_appconfig::Client::from_conf(appconfig_config_builder.build())
+}
+
+/// get the data from the ssm parameter store by name
+/// Will cache the result for 60s
+#[cached(time = 60, result = true)]
+pub async fn get_appconfig_configuration_by_version(
+    application_id: String,
+    configuration_profile_id: String,
+    version_number: i32,
+) -> Result<String, aws_sdk_appconfig::Error> {
+    let shared_config = aws_config::from_env().load().await;
+    let client = appconfig_client(&shared_config);
+    let result = client
+        .get_hosted_configuration_version()
+        .application_id(application_id)
+        .configuration_profile_id(configuration_profile_id)
+        .version_number(version_number)
+        .send()
+        .await
+        .unwrap()
+        .content()
+        .unwrap()
+        .to_owned()
+        .into_inner();
+
+    let res = std::string::String::from_utf8(result).unwrap();
+
+    Ok(res)
+}
+
 /// get the data from the ssm parameter store by name
 /// Will cache the result for 60s
 #[cached(time = 60, result = true)]
