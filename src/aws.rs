@@ -6,7 +6,7 @@ use futures::future::ok;
 use http::Uri;
 use k8s_openapi::ByteString;
 
-use crate::Backend;
+use crate::{utils, Backend};
 
 /// if using localstack as aws backend
 pub fn use_localstack() -> bool {
@@ -53,7 +53,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
 
 /// get the cloudformation client
 pub fn appconfig_client(conf: &aws_types::SdkConfig) -> aws_sdk_appconfig::Client {
-    let mut appconfig_config_builder = aws_sdk_appconfig::config::Builder::from(conf);
+    let appconfig_config_builder = aws_sdk_appconfig::config::Builder::from(conf);
 
     aws_sdk_appconfig::Client::from_conf(appconfig_config_builder.build())
 }
@@ -194,19 +194,20 @@ pub async fn get_secret_manager_secret_data(
     let mut secrets = BTreeMap::new();
 
     for secret_data in backend.data.iter() {
-        if secret_data.secret_field_name.is_some() {
-            let ssm_secret_data =
-                get_secretsmanager_parameter(secret_data.name_or_value.clone()).await;
+        let secret_manager_data =
+            get_secretsmanager_parameter(secret_data.name_or_value.clone()).await;
+        match secret_manager_data {
+            Ok(secret_manager_data) => {
+                let data =
+                    utils::rsecret_data_to_secret_data(secret_data, &secret_manager_data).unwrap();
 
-            let key = secret_data.secret_field_name.clone().unwrap();
-
-            match ssm_secret_data {
-                Ok(ssm_secret_data) => {
-                    secrets.insert(key, ByteString(ssm_secret_data.clone().into_bytes()));
-                }
-                Err(err) => {
-                    log::error!("{}", err);
-                }
+                secrets = data
+                    .into_iter()
+                    .chain(secrets.clone().into_iter())
+                    .collect();
+            }
+            Err(err) => {
+                log::error!("{}", err);
             }
         }
     }
@@ -230,14 +231,18 @@ pub async fn get_cloudformation_stack_secret_data(
             )
             .await;
 
-            let key = secret_data.secret_field_name.clone().unwrap();
-
             match cloudformation_secret_data {
                 Ok(cloudformation_secret_data) => {
-                    secrets.insert(
-                        key,
-                        ByteString(cloudformation_secret_data.clone().into_bytes()),
-                    );
+                    let data = utils::rsecret_data_to_secret_data(
+                        secret_data,
+                        &cloudformation_secret_data,
+                    )
+                    .unwrap();
+
+                    secrets = data
+                        .into_iter()
+                        .chain(secrets.clone().into_iter())
+                        .collect();
                 }
                 Err(err) => {
                     log::error!("{}", err);
@@ -272,18 +277,20 @@ pub async fn get_ssm_secret_data(
     let mut secrets = BTreeMap::new();
 
     for secret_data in backend.data.iter() {
-        if secret_data.secret_field_name.is_some() {
-            let ssm_secret_data = get_ssm_parameter(secret_data.name_or_value.clone()).await;
+        let ssm_secret_data = get_ssm_parameter(secret_data.name_or_value.clone()).await;
 
-            let key = secret_data.secret_field_name.clone().unwrap();
+        match ssm_secret_data {
+            Ok(ssm_secret_data) => {
+                let data =
+                    utils::rsecret_data_to_secret_data(secret_data, &ssm_secret_data).unwrap();
 
-            match ssm_secret_data {
-                Ok(ssm_secret_data) => {
-                    secrets.insert(key, ByteString(ssm_secret_data.clone().into_bytes()));
-                }
-                Err(err) => {
-                    log::error!("{}", err);
-                }
+                secrets = data
+                    .into_iter()
+                    .chain(secrets.clone().into_iter())
+                    .collect();
+            }
+            Err(err) => {
+                log::error!("{}", err);
             }
         }
     }
