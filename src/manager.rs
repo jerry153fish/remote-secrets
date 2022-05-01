@@ -84,7 +84,7 @@ async fn reconcile(
                 info!("No changes to rsecret {} in namespace {}", name, ns);
             } else {
                 info!("Updating rsecret {} in namespace {}", name, ns);
-                rsecret::update_k8s_secret(client.clone(), &rs, data_string.clone()).await?;
+                rsecret::update_k8s_secret(client.clone(), &rs, data_string.as_str()).await?;
             }
 
             Ok(Action::requeue(Duration::from_secs(10)))

@@ -11,6 +11,7 @@ pub enum Error {
     #[error("SerializationError: {0}")]
     SerializationError(#[source] serde_json::Error),
 }
+
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// crd
@@ -33,4 +34,5 @@ pub use metrics::Metrics;
 
 pub mod rsecret;
 pub mod utils;
+pub mod vault;
 pub mod web;
