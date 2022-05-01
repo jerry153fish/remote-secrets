@@ -9,7 +9,7 @@ use k8s_openapi::ByteString;
 use crate::{utils, Backend};
 
 /// if using localstack as aws backend
-pub fn use_localstack() -> bool {
+pub fn is_test_env() -> bool {
     std::env::var("TEST_ENV").unwrap_or_default() == "true"
 }
 
@@ -22,7 +22,7 @@ pub fn localstack_endpoint() -> Endpoint {
 /// get the ssm client
 pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
     let mut ssm_config_builder = aws_sdk_ssm::config::Builder::from(conf);
-    if use_localstack() {
+    if is_test_env() {
         log::info!("Using localstack for ssm");
         ssm_config_builder = ssm_config_builder.endpoint_resolver(localstack_endpoint())
     }
@@ -32,7 +32,7 @@ pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
 /// get the secret manager client
 pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmanager::Client {
     let mut secretsmanager_config_builder = aws_sdk_secretsmanager::config::Builder::from(conf);
-    if use_localstack() {
+    if is_test_env() {
         log::info!("Using localstack for SecretsManager");
         secretsmanager_config_builder =
             secretsmanager_config_builder.endpoint_resolver(localstack_endpoint())
@@ -43,7 +43,7 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
 /// get the cloudformation client
 pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformation::Client {
     let mut cloudformation_config_builder = aws_sdk_cloudformation::config::Builder::from(conf);
-    if use_localstack() {
+    if is_test_env() {
         log::info!("Using localstack for CloudFormation");
         cloudformation_config_builder =
             cloudformation_config_builder.endpoint_resolver(localstack_endpoint())

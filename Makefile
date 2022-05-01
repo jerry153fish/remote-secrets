@@ -59,6 +59,7 @@ init-test:
 	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyTestSecret --secret-string "Vicd" > /dev/null || true
 	aws cloudformation create-stack --endpoint-url http://localhost:4566 --stack-name MyTestStack --template-body file://e2e/mock-cfn.yaml > debug/create-stack-result.json || true
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"bar"}}' http://127.0.0.1:8200/v1/secret/data/baz || true
+	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"test": "aaa"}}}' http://127.0.0.1:8200/v1/secret/data/foo || true
 
 fmt:
 	cargo fmt --all

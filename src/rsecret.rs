@@ -133,7 +133,7 @@ pub async fn create_k8s_secret(client: Client, rsecret: &RSecret) -> Result<Secr
 pub async fn update_k8s_secret(
     client: Client,
     rsecret: &RSecret,
-    data_string: String,
+    data_string: &str,
 ) -> Result<Secret, kube::Error> {
     let name = rsecret.metadata.name.clone().unwrap_or_default();
     let ns = rsecret
@@ -142,9 +142,9 @@ pub async fn update_k8s_secret(
         .clone()
         .unwrap_or("default".to_owned());
 
-    let hash_id = calculate_hash(&data_string);
+    let hash_id = calculate_hash(&data_string.to_string());
 
-    let data_value = serde_json::from_str::<Value>(&data_string).unwrap();
+    let data_value = serde_json::from_str::<Value>(data_string).unwrap();
 
     let secret_patch_value = json!({
         "metadata": {
