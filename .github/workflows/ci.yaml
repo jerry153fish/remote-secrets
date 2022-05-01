@@ -32,7 +32,7 @@ jobs:
       AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: foobar
       AWS_SECRET_ACCESS_KEY: foobar
-      VAULT_ADDR: http://localhost:9200
+      VAULT_ADDR: http://localhost:8200
       VAULT_TOKEN: vault-plaintext-root-token
 
     steps:
