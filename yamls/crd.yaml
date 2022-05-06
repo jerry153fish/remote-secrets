@@ -44,27 +44,36 @@ spec:
                         description: Secret data configurations
                         items:
                           properties:
+                            configuration_profile_id:
+                              description: configuration profile id for appconfig
+                              nullable: true
+                              type: string
                             is_json_string:
                               description: whether the remote data is jsonstrinified string or not
                               nullable: true
                               type: boolean
-                            name_or_value:
-                              description: name for the remote backend for ssm / paramstore / application configuration this is the name or arn for cloudformation and pulumi this is the stack name for plaintext this is the value of the secret
-                              type: string
                             output_key:
                               description: output key for cloudformation or pulumi
                               nullable: true
                               type: string
                             remote_nest_path:
-                              description: nested path for the remote data
+                              description: "nested path for the remote data, if remote value is a json"
                               nullable: true
+                              type: string
+                            remote_value:
+                              description: for ssm / paramstore this is the name of the key for cloudformation and pulumi this is the stack name for plaintext this is the value of the secret for appconfig this is the application id
                               type: string
                             secret_field_name:
                               description: secret field name
                               nullable: true
                               type: string
+                            version_number:
+                              description: version number for the Hosted configuration versions for appconfig
+                              format: int32
+                              nullable: true
+                              type: integer
                           required:
-                            - name_or_value
+                            - remote_value
                           type: object
                         type: array
                       pulumi_token:
