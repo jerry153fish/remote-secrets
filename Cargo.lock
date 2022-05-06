@@ -2554,6 +2554,7 @@ name = "remote-secrets"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "anyhow",
  "aws-config",
  "aws-sdk-appconfig",
  "aws-sdk-cloudformation",
@@ -2578,7 +2579,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "thiserror",
  "tokio",
 ]
 

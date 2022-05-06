@@ -8,6 +8,8 @@ use k8s_openapi::ByteString;
 
 use crate::{utils, Backend};
 
+use anyhow::Result;
+
 /// if using localstack as aws backend
 pub fn is_test_env() -> bool {
     std::env::var("TEST_ENV").unwrap_or_default() == "true"
@@ -65,7 +67,7 @@ pub async fn get_appconfig_configuration_by_version(
     application_id: String,
     configuration_profile_id: String,
     version_number: i32,
-) -> Result<String, aws_sdk_appconfig::Error> {
+) -> Result<String> {
     let shared_config = aws_config::from_env().load().await;
     let client = appconfig_client(&shared_config);
     let result = client
@@ -74,14 +76,13 @@ pub async fn get_appconfig_configuration_by_version(
         .configuration_profile_id(configuration_profile_id)
         .version_number(version_number)
         .send()
-        .await
-        .unwrap()
+        .await?
         .content()
         .unwrap()
         .to_owned()
         .into_inner();
 
-    let res = std::string::String::from_utf8(result).unwrap();
+    let res = std::string::String::from_utf8(result)?;
 
     Ok(res)
 }
@@ -89,7 +90,7 @@ pub async fn get_appconfig_configuration_by_version(
 /// get the data from the ssm parameter store by name
 /// Will cache the result for 60s
 #[cached(time = 60, result = true)]
-pub async fn get_ssm_parameter(name: String) -> Result<String, aws_sdk_ssm::Error> {
+pub async fn get_ssm_parameter(name: String) -> Result<String> {
     let shared_config = aws_config::from_env().load().await;
     let client = ssm_client(&shared_config);
     let parmeter = client.get_parameter().name(name).send().await?;
@@ -100,9 +101,7 @@ pub async fn get_ssm_parameter(name: String) -> Result<String, aws_sdk_ssm::Erro
 /// get the data from the secret manager store by name
 /// Will cache the result for 60s
 #[cached(time = 60, result = true)]
-pub async fn get_secretsmanager_parameter(
-    name: String,
-) -> Result<String, aws_sdk_secretsmanager::Error> {
+pub async fn get_secretsmanager_parameter(name: String) -> Result<String> {
     let shared_config = aws_config::from_env().load().await;
     let client = secretsmanager_client(&shared_config);
     let output = client.get_secret_value().secret_id(name).send().await?;
@@ -115,7 +114,7 @@ pub async fn get_secretsmanager_parameter(
 #[cached(time = 60, result = true)]
 pub async fn get_cloudformation_outputs(
     stack_name: String,
-) -> Result<Vec<aws_sdk_cloudformation::model::Output>, aws_sdk_cloudformation::Error> {
+) -> Result<Vec<aws_sdk_cloudformation::model::Output>> {
     let shared_config = aws_config::from_env().load().await;
     let client = cloudformation_client(&shared_config);
     let resp = client
@@ -136,10 +135,7 @@ pub async fn get_cloudformation_outputs(
 }
 
 /// get the output value from the cloudformation stack
-pub async fn get_cloudformation_output(
-    stack_name: String,
-    output_key: String,
-) -> Result<String, aws_sdk_cloudformation::Error> {
+pub async fn get_cloudformation_output(stack_name: String, output_key: String) -> Result<String> {
     let outputs = get_cloudformation_outputs(stack_name).await?;
     let result = outputs
         .iter()
@@ -154,7 +150,7 @@ pub async fn get_cloudformation_output(
 // get the secret data from the whole outputs of the cloudformation stack
 pub async fn get_cloudformation_outputs_as_secret_data(
     stack_name: String,
-) -> Result<BTreeMap<String, ByteString>, aws_sdk_cloudformation::Error> {
+) -> Result<BTreeMap<String, ByteString>> {
     let outputs = get_cloudformation_outputs(stack_name).await?;
     let mut secrets = BTreeMap::new();
     for output in outputs {
@@ -179,7 +175,7 @@ pub fn get_plain_text_secret_data(backend: &Backend) -> BTreeMap<String, ByteStr
         if secret_data.secret_field_name.is_some() {
             secrets.insert(
                 secret_data.secret_field_name.clone().unwrap(),
-                ByteString(secret_data.name_or_value.clone().as_bytes().to_vec()),
+                ByteString(secret_data.remote_value.clone().as_bytes().to_vec()),
             );
         }
     });
@@ -190,16 +186,15 @@ pub fn get_plain_text_secret_data(backend: &Backend) -> BTreeMap<String, ByteStr
 /// convert the secret manager data to k8s secret data
 pub async fn get_secret_manager_secret_data(
     backend: &Backend,
-) -> Result<BTreeMap<String, ByteString>, aws_sdk_secretsmanager::Error> {
+) -> Result<BTreeMap<String, ByteString>> {
     let mut secrets = BTreeMap::new();
 
     for secret_data in backend.data.iter() {
         let secret_manager_data =
-            get_secretsmanager_parameter(secret_data.name_or_value.clone()).await;
+            get_secretsmanager_parameter(secret_data.remote_value.clone()).await;
         match secret_manager_data {
             Ok(secret_manager_data) => {
-                let data =
-                    utils::rsecret_data_to_secret_data(secret_data, &secret_manager_data).unwrap();
+                let data = utils::rsecret_data_to_secret_data(secret_data, &secret_manager_data)?;
 
                 secrets = data
                     .into_iter()
@@ -218,7 +213,7 @@ pub async fn get_secret_manager_secret_data(
 /// convert the secret manager data to k8s secret data
 pub async fn get_cloudformation_stack_secret_data(
     backend: &Backend,
-) -> Result<BTreeMap<String, ByteString>, aws_sdk_secretsmanager::Error> {
+) -> Result<BTreeMap<String, ByteString>> {
     let mut secrets = BTreeMap::new();
 
     for secret_data in backend.data.iter() {
@@ -226,7 +221,7 @@ pub async fn get_cloudformation_stack_secret_data(
         // TODO: support the output value is not dict
         if secret_data.secret_field_name.is_some() && secret_data.output_key.is_some() {
             let cloudformation_secret_data = get_cloudformation_output(
-                secret_data.name_or_value.clone(),
+                secret_data.remote_value.clone(),
                 secret_data.output_key.clone().unwrap(),
             )
             .await;
@@ -236,8 +231,7 @@ pub async fn get_cloudformation_stack_secret_data(
                     let data = utils::rsecret_data_to_secret_data(
                         secret_data,
                         &cloudformation_secret_data,
-                    )
-                    .unwrap();
+                    )?;
 
                     secrets = data
                         .into_iter()
@@ -251,7 +245,7 @@ pub async fn get_cloudformation_stack_secret_data(
         } else {
             // insert the whole cloudformation outputs into k8s secret data
             let cloudformation_secret_data =
-                get_cloudformation_outputs_as_secret_data(secret_data.name_or_value.clone()).await;
+                get_cloudformation_outputs_as_secret_data(secret_data.remote_value.clone()).await;
 
             match cloudformation_secret_data {
                 Ok(cloudformation_secret_data) => {
@@ -271,18 +265,15 @@ pub async fn get_cloudformation_stack_secret_data(
 }
 
 /// convert the ssm backend data to k8s secret data
-pub async fn get_ssm_secret_data(
-    backend: &Backend,
-) -> Result<BTreeMap<String, ByteString>, aws_sdk_secretsmanager::Error> {
+pub async fn get_ssm_secret_data(backend: &Backend) -> Result<BTreeMap<String, ByteString>> {
     let mut secrets = BTreeMap::new();
 
     for secret_data in backend.data.iter() {
-        let ssm_secret_data = get_ssm_parameter(secret_data.name_or_value.clone()).await;
+        let ssm_secret_data = get_ssm_parameter(secret_data.remote_value.clone()).await;
 
         match ssm_secret_data {
             Ok(ssm_secret_data) => {
-                let data =
-                    utils::rsecret_data_to_secret_data(secret_data, &ssm_secret_data).unwrap();
+                let data = utils::rsecret_data_to_secret_data(secret_data, &ssm_secret_data)?;
 
                 secrets = data
                     .into_iter()

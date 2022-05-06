@@ -19,6 +19,7 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-web = "4.0.1"
+anyhow = "1.0"
 aws-config = "0.10.1"
 aws-sdk-appconfig = "0.10.1"
 aws-sdk-cloudformation = "0.10.1"
@@ -40,7 +41,6 @@ schemars = {version = "0.8.8", features = ["chrono"]}
 serde = {version = "1.0.136", features = ["derive"]}
 serde_json = "1.0.79"
 serde_yaml = "0.8.23"
-thiserror = "1.0.30"
 tokio = {version = "1.16.1", features = ["macros", "rt-multi-thread"]}
 
 [dev-dependencies]

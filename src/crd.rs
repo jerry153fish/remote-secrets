@@ -45,18 +45,17 @@ pub struct Backend {
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
 pub struct SecretData {
-    /// name for the remote backend
-    /// for ssm / paramstore this is the name or arn
+    /// for ssm / paramstore this is the name of the key
     /// for cloudformation and pulumi this is the stack name
     /// for plaintext this is the value of the secret
-    /// appconfig this is the application id
-    pub name_or_value: String,
+    /// for appconfig this is the application id
+    pub remote_value: String,
 
     /// whether the remote data is jsonstrinified string or not
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_json_string: Option<bool>,
 
-    /// nested path for the remote data
+    /// nested path for the remote data, if remote value is a json
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remote_nest_path: Option<String>,
 

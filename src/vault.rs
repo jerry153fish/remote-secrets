@@ -14,18 +14,12 @@ use crate::{utils, Backend};
 use crate::aws;
 use json_dotpath::DotPaths;
 
-use crate::{Error, Result};
+use anyhow::Result;
 
 #[cached(time = 60, result = true)]
-pub async fn get_vault_value(path: String) -> Result<String, Error> {
+pub async fn get_vault_value(path: String) -> Result<String> {
     let client = get_vault_client(path.clone())?;
-    let response: serde_json::Value = client
-        .send()
-        .await
-        .map_err(Error::ReqwestError)?
-        .json()
-        .await
-        .map_err(Error::ReqwestError)?;
+    let response: serde_json::Value = client.send().await?.json().await?;
 
     let result = response
         .dot_get::<serde_json::Value>("data.data.value")
@@ -36,12 +30,12 @@ pub async fn get_vault_value(path: String) -> Result<String, Error> {
     Ok(result)
 }
 
-pub fn get_vault_secret_endpoint() -> Result<String, Error> {
+pub fn get_vault_secret_endpoint() -> Result<String> {
     let url;
     if aws::is_test_env() {
         url = std::env::var("VAULT_ADDR").unwrap_or("http://localhost:8200".to_string());
     } else {
-        url = std::env::var("VAULT_ADDR").map_err(Error::VarError)?;
+        url = std::env::var("VAULT_ADDR")?;
     }
     if url.ends_with("/") {
         Ok(format!("{}v1/secret/data/", url))
@@ -50,17 +44,17 @@ pub fn get_vault_secret_endpoint() -> Result<String, Error> {
     }
 }
 
-pub fn get_vault_token() -> Result<String, Error> {
+pub fn get_vault_token() -> Result<String> {
     let token;
     if aws::is_test_env() {
         token = std::env::var("VAULT_TOKEN").unwrap_or("vault-plaintext-root-token".to_string());
     } else {
-        token = std::env::var("VAULT_TOKEN").map_err(Error::VarError)?;
+        token = std::env::var("VAULT_TOKEN")?;
     }
     Ok(token)
 }
 
-pub fn get_vault_client(key: String) -> Result<reqwest::RequestBuilder, Error> {
+pub fn get_vault_client(key: String) -> Result<reqwest::RequestBuilder> {
     let endpoint = get_vault_secret_endpoint()?;
     let token = get_vault_token()?;
 
@@ -74,16 +68,14 @@ pub fn get_vault_client(key: String) -> Result<reqwest::RequestBuilder, Error> {
 }
 
 /// convert the vault data to k8s secret data
-pub async fn get_vault_secret_data(
-    backend: &Backend,
-) -> Result<BTreeMap<String, ByteString>, Error> {
+pub async fn get_vault_secret_data(backend: &Backend) -> Result<BTreeMap<String, ByteString>> {
     let mut secrets = BTreeMap::new();
 
     for secret_data in backend.data.iter() {
-        let vault_data = get_vault_value(secret_data.name_or_value.clone()).await;
+        let vault_data = get_vault_value(secret_data.remote_value.clone()).await;
         match vault_data {
             Ok(vault_data) => {
-                let data = utils::rsecret_data_to_secret_data(secret_data, &vault_data).unwrap();
+                let data = utils::rsecret_data_to_secret_data(secret_data, &vault_data)?;
 
                 secrets = data
                     .into_iter()
@@ -105,7 +97,7 @@ pub async fn get_vault_secret_data(
 //     let mut secrets = BTreeMap::new();
 
 //     for secret_data in backend.data.iter() {
-//         let vault_data = get_vault_value(secret_data.name_or_value.as_str());
+//         let vault_data = get_vault_value(secret_data.remote_value.as_str());
 //         match vault_data {
 //             Ok(vault_data) => {
 //                 let data = utils::rsecret_data_to_secret_data(secret_data, &vault_data).unwrap();
