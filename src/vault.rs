@@ -2,7 +2,6 @@ use std::{collections::BTreeMap, env::VarError};
 
 use cached::proc_macro::cached;
 use k8s_openapi::ByteString;
-use thiserror::Error;
 
 use std::str::FromStr;
 
@@ -15,19 +14,7 @@ use crate::{utils, Backend};
 use crate::aws;
 use json_dotpath::DotPaths;
 
-#[derive(Error, Debug)]
-pub enum Error {
-    #[error("Environment error: {0}")]
-    VarError(#[source] VarError),
-
-    #[error("reqwest: {0}")]
-    ReqwestError(#[source] reqwest::Error),
-
-    #[error("SerializationError: {0}")]
-    SerializationError(#[source] serde_json::Error),
-}
-
-pub type Result<T, E = Error> = std::result::Result<T, E>;
+use crate::{Error, Result};
 
 #[cached(time = 60, result = true)]
 pub async fn get_vault_value(path: String) -> Result<String, Error> {
