@@ -30,6 +30,7 @@ use log::{info, warn, LevelFilter};
 
 use crate::{rsecret, Metrics, RSecret, RSecretStatus};
 
+use anyhow::{anyhow, Result};
 use std::collections::BTreeMap;
 
 async fn reconcile(
@@ -59,7 +60,7 @@ async fn reconcile(
             rsecret::add(client.clone(), &name, &ns).await?;
 
             rsecret::create_k8s_secret(client.clone(), &rs).await?;
-            Ok(Action::requeue(Duration::from_secs(10)))
+            Ok(Action::requeue(Duration::from_secs(20)))
         }
         RSecretAction::Delete => {
             rsecret::delete_k8s_secret(client.clone(), &name, &ns).await?;
@@ -87,7 +88,7 @@ async fn reconcile(
                 rsecret::update_k8s_secret(client.clone(), &rs, data_string.as_str()).await?;
             }
 
-            Ok(Action::requeue(Duration::from_secs(10)))
+            Ok(Action::requeue(Duration::from_secs(20)))
         }
     };
 }
@@ -154,7 +155,7 @@ pub struct Manager {
     state: Arc<RwLock<State>>,
 }
 
-/// Example Manager that owns a Controller for Foo
+/// Example Manager that owns a Controller for RSecret
 impl Manager {
     /// Lifecycle initialization interface for app
     ///

@@ -6,6 +6,7 @@ use crate::{
     Backend, BackendType, Metrics, RSecret,
 };
 
+use anyhow::{anyhow, Result};
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::{
     api::{DeleteParams, Patch, PatchParams, PostParams},
@@ -32,22 +33,21 @@ pub async fn get_secret_data(
                     .collect();
             }
             BackendType::SecretManager => {
-                let secret_manager_secret_data =
-                    get_secret_manager_secret_data(backend).await.unwrap();
+                let secret_manager_secret_data = get_secret_manager_secret_data(backend).await;
                 secrets = secret_manager_secret_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())
                     .collect();
             }
             BackendType::SSM => {
-                let aws_ssm_data = get_ssm_secret_data(backend).await.unwrap();
+                let aws_ssm_data = get_ssm_secret_data(backend).await;
                 secrets = aws_ssm_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())
                     .collect();
             }
             BackendType::Cloudformation => {
-                let aws_cfn_data = get_cloudformation_stack_secret_data(backend).await.unwrap();
+                let aws_cfn_data = get_cloudformation_stack_secret_data(backend).await;
                 secrets = aws_cfn_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())
@@ -62,7 +62,7 @@ pub async fn get_secret_data(
 
 /// Adds a finalizer record into an `RSecret` kind of resource. If the finalizer already exists,
 /// this action has no effect.
-pub async fn add(client: Client, name: &str, namespace: &str) -> Result<RSecret, Error> {
+pub async fn add(client: Client, name: &str, namespace: &str) -> Result<RSecret, kube::Error> {
     let api: Api<RSecret> = Api::namespaced(client, namespace);
     let finalizer: Value = json!({
         "metadata": {
@@ -76,7 +76,7 @@ pub async fn add(client: Client, name: &str, namespace: &str) -> Result<RSecret,
 
 /// Removes all finalizers from an `RSecret` resource. If there are no finalizers already, this
 /// action has no effect.
-pub async fn delete(client: Client, name: &str, namespace: &str) -> Result<RSecret, Error> {
+pub async fn delete(client: Client, name: &str, namespace: &str) -> Result<RSecret, kube::Error> {
     let api: Api<RSecret> = Api::namespaced(client, namespace);
     let finalizer: Value = json!({
         "metadata": {
@@ -159,9 +159,9 @@ pub async fn update_k8s_secret(
 
     let k8s_secret_api: Api<Secret> = Api::namespaced(client.clone(), &ns);
 
-    Ok(k8s_secret_api
+    k8s_secret_api
         .patch(&name, &PatchParams::default(), &patch)
-        .await?)
+        .await
 }
 
 /// delete a secret by name

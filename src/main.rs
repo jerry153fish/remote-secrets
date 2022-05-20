@@ -7,11 +7,12 @@ use log4rs::{
 
 use actix_web::{middleware, web::Data, App, HttpServer};
 
+use anyhow::Result;
 pub use controller::*;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    init_log();
+async fn main() -> Result<()> {
+    init_log()?;
     info!("Starting controller");
 
     let (manager, drainer) = Manager::new().await;
@@ -20,9 +21,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let server = HttpServer::new(move || {
         App::new()
             .app_data(Data::new(manager.clone()))
-            .wrap(middleware::Logger::default().exclude("/health"))
+            .wrap(
+                middleware::Logger::default()
+                    .exclude("/healthz")
+                    .exclude("/readyz"),
+            )
             .service(web::health)
             .service(web::metrics)
+            .service(web::ready)
     })
     .bind("0.0.0.0:8080")
     .expect("Can not bind to 0.0.0.0:8080")
@@ -36,13 +42,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_log() {
+fn init_log() -> Result<()> {
     let stdout: ConsoleAppender = ConsoleAppender::builder()
         .encoder(Box::new(JsonEncoder::new()))
         .build();
     let log_config = log4rs::config::Config::builder()
         .appender(Appender::builder().build("stdout", Box::new(stdout)))
-        .build(Root::builder().appender("stdout").build(LevelFilter::Info))
-        .unwrap();
-    log4rs::init_config(log_config).unwrap();
+        .build(Root::builder().appender("stdout").build(LevelFilter::Info))?;
+    log4rs::init_config(log_config)?;
+    Ok(())
 }
