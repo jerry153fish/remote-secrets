@@ -6,9 +6,14 @@ use crate::manager::Manager;
 
 use prometheus::{Encoder, TextEncoder};
 
-#[get("/health")]
+#[get("/healthz")]
 pub async fn health(_: HttpRequest) -> impl Responder {
     HttpResponse::Ok().json("healthy")
+}
+
+#[get("/readyz")]
+pub async fn ready(_: HttpRequest) -> impl Responder {
+    HttpResponse::Ok().json("ready")
 }
 
 #[get("/metrics")]

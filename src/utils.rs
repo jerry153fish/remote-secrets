@@ -35,7 +35,7 @@ pub fn get_json_string_as_secret_data(json_string: &str) -> Result<BTreeMap<Stri
 pub fn rsecret_data_to_secret_data(
     rsecret_data: &SecretData,
     value_string: &str,
-) -> Result<BTreeMap<String, ByteString>> {
+) -> BTreeMap<String, ByteString> {
     let mut secrets = BTreeMap::new();
     if rsecret_data.secret_field_name.is_some() {
         let key = rsecret_data.secret_field_name.clone().unwrap();
@@ -63,7 +63,7 @@ pub fn rsecret_data_to_secret_data(
         }
     }
 
-    Ok(secrets)
+    secrets
 }
 
 #[cfg(test)]

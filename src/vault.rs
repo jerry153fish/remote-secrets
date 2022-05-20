@@ -75,7 +75,7 @@ pub async fn get_vault_secret_data(backend: &Backend) -> Result<BTreeMap<String,
         let vault_data = get_vault_value(secret_data.remote_value.clone()).await;
         match vault_data {
             Ok(vault_data) => {
-                let data = utils::rsecret_data_to_secret_data(secret_data, &vault_data)?;
+                let data = utils::rsecret_data_to_secret_data(secret_data, &vault_data);
 
                 secrets = data
                     .into_iter()
