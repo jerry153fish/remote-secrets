@@ -25,8 +25,29 @@ spec:
       serviceAccountName: remote-secrets
       containers:
         - name: remote-secrets-operator
-          image: test:latest
-          imagePullPolicy: Never
+          image: controller:latest
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 50Mi
+          envFrom:
+            - secretRef:
+                name: remote-secrets
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
