@@ -142,26 +142,29 @@ pub async fn update_k8s_secret(
         .clone()
         .unwrap_or("default".to_owned());
 
-    let hash_id = calculate_hash(&data_string.to_string());
-
-    let data_value = serde_json::from_str::<Value>(data_string).unwrap();
-
-    let secret_patch_value = json!({
-        "metadata": {
-            "labels": {
-                "hash_id": hash_id.to_string()
-            }
-        },
-        "data": data_value
-    });
-
-    let patch: Patch<&Value> = Patch::Merge(&secret_patch_value);
-
     let k8s_secret_api: Api<Secret> = Api::namespaced(client.clone(), &ns);
 
-    k8s_secret_api
-        .patch(&name, &PatchParams::default(), &patch)
-        .await
+    if let Ok(_) = k8s_secret_api.get(&name).await {
+        let hash_id = calculate_hash(&data_string.to_string());
+
+        let data_value = serde_json::from_str::<Value>(data_string).unwrap();
+
+        let secret_patch_value = json!({
+            "metadata": {
+                "labels": {
+                    "hash_id": hash_id.to_string()
+                }
+            },
+            "data": data_value
+        });
+
+        let patch: Patch<&Value> = Patch::Merge(&secret_patch_value);
+        k8s_secret_api
+            .patch(&name, &PatchParams::default(), &patch)
+            .await
+    } else {
+        create_k8s_secret(client.clone(), rsecret).await
+    }
 }
 
 /// delete a secret by name
@@ -171,7 +174,10 @@ pub async fn delete_k8s_secret(
     namespace: &str,
 ) -> Result<(), kube::Error> {
     let api: Api<Secret> = Api::namespaced(client, namespace);
-    api.delete(name, &DeleteParams::default()).await?;
+    if let Ok(_) = api.get(&name).await {
+        api.delete(name, &DeleteParams::default()).await?;
+    }
+
     Ok(())
 }
 
