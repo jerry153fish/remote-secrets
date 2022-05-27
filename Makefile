@@ -44,16 +44,27 @@ all: build
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-crdgen:
+##@ Development
+
+manifest: ## Generate the manifest file.
+	kubectl kustomize config/default | k apply -f -
+
+manifest-clean: ## Clean the manifest file.
+	kubectl kustomize config/default | k delete -f -
+
+manifest-local: ## Generate the manifest file for local testing.
+	kubectl kustomize config/local | k apply -f -
+
+manifest-local-clean: ## Clean the manifest file for local testing.
+	kubectl kustomize config/local | k delete -f -
+
+crdgen: ## Generate CRDs
 	cargo run --bin crdgen > config/crd.yaml
 
-controller:
-	cargo run --bin controller
-
-test:
+test: ## run the tests
 	export TEST_ENV=true && cargo test --all-targets -- --nocapture
 
-init-test:
+init-test: ## init the test environment
 	mkdir debug || true
 	aws ssm put-parameter --endpoint-url http://localhost:4566 --name MyStringParameter --type "String" --value "Vici" --overwrite > /dev/null || true
 	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyTestSecret --secret-string "Vicd" > /dev/null || true
@@ -61,11 +72,30 @@ init-test:
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"bar"}}' http://127.0.0.1:8200/v1/secret/data/baz || true
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"test": "aaa"}}}' http://127.0.0.1:8200/v1/secret/data/foo || true
 
-fmt:
+kind-cluster: ## create a kind cluster
+	kind create cluster --name local || true
+
+fmt: ## format the code
 	cargo fmt --all
 
-doc:
+doc: ## generate the documentation
 	cargo doc
 
-install: crdgen
-	kubectl apply -f yamls/crd.yaml
+##@ Build
+
+controller: ## Run a controller from your host.
+	cargo run --bin controller
+
+docker-build: ## Build docker image with the manager.
+	docker build -t ${IMG} .
+
+##@ Deployment
+
+install-crd: crdgen ## install the CRDs
+	kubectl apply -f config/crd.yaml
+
+kind-image-load: ## load the kind image
+	kind load docker-image ${IMG} --name local
+
+install-local: ## install the local cluster
+	
