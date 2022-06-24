@@ -67,5 +67,5 @@ fmt:
 doc:
 	cargo doc
 
-install: crdgen
-	kubectl apply -f yamls/crd.yaml
+crd: crdgen
+	kubectl apply -f config/crd.yaml
