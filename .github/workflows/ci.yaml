@@ -94,7 +94,7 @@ jobs:
         with:
           context: .
           tags: |
-            ${{ github.ref != 'refs/heads/main' && steps.docker_meta.outputs.tags || '' }}
+            ${{ github.ref != 'refs/heads/main' && steps.meta.outputs.tags || '' }}
             ${{ github.ref == 'refs/heads/main' && 'jerry153fish/remote-secrets:latest' || '' }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
