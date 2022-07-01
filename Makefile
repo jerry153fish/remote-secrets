@@ -47,16 +47,16 @@ help: ## Display this help.
 ##@ Development
 
 manifest: ## Generate the manifest file.
-	kubectl kustomize config/default | k apply -f -
+	kubectl kustomize config/default | kubectl apply -f -
 
 manifest-clean: ## Clean the manifest file.
-	kubectl kustomize config/default | k delete -f -
+	kubectl kustomize config/default | kubectl delete -f -
 
 manifest-local: ## Generate the manifest file for local testing.
-	kubectl kustomize config/local | k apply -f -
+	kubectl kustomize config/local | kubectl apply -f -
 
 manifest-local-clean: ## Clean the manifest file for local testing.
-	kubectl kustomize config/local | k delete -f -
+	kubectl kustomize config/local | kubectl delete -f -
 
 crdgen: ## Generate CRDs
 	cargo run --bin crdgen > config/crd.yaml

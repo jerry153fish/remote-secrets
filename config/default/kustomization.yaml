@@ -1,8 +1,2 @@
 resources:
   - manager.yaml
-  - remote-secrets-config.yaml
-
-images:
-  - name: controller
-    newName: jerry153fish/remote-secrets
-    newTag: latest

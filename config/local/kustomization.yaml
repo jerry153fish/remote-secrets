@@ -3,3 +3,8 @@ bases:
 
 resources:
   - dockerhost.yaml
+
+images:
+  - name: jerry153fish/remote-secrets
+    newName: controller
+    newTag: latest

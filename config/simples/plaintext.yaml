@@ -1,0 +1,14 @@
+apiVersion: jerry153fish.com/v1beta1
+kind: RSecret # Identifier of the resource type.
+metadata:
+  name: test-plaintext # Name of the "RSecret" custom resource instance, may be changed to your liking
+  namespace: default # Namespace must exist and account in KUBECONFIG must have sufficient permissions
+spec:
+  description: "test plaintext secrets" # Optional description of the resource
+  resources:
+    - backend: Plaintext
+      data:
+        - remote_value: test-rsecret-plaintext-value
+          secret_field_name: test-rsecret-plaintext
+        - remote_value: test-rsecret-plaintext-value-1
+          secret_field_name: test-rsecret-plaintext-1

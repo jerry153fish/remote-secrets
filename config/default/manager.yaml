@@ -25,7 +25,7 @@ spec:
       serviceAccountName: remote-secrets
       containers:
         - name: remote-secrets-operator
-          image: controller:latest
+          image: jerry153fish/remote-secrets:latest
           livenessProbe:
             httpGet:
               path: /healthz
@@ -205,4 +205,16 @@ subjects:
     name: remote-secrets
     namespace: remote-secrets
 ---
-
+apiVersion: v1
+kind: Secret
+metadata:
+  name: remote-secrets
+  namespace: remote-secrets
+type: Opaque
+stringData:
+  APP: "remote-secrets"
+#  AWS_ACCESS_KEY_ID: "aaa"
+#  AWS_SECRET_ACCESS_KEY: "secret"
+#  AWS_REGION: "ap-southeast-2"
+#  LOCALSTACK_URL: "http://dockerhost:4572"
+#  TEST_ENV: "true"
