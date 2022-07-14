@@ -8,6 +8,8 @@ use prometheus::{
 pub struct Metrics {
     pub reconciliations: IntCounter,
     pub failures: IntCounter,
+    pub create_counts: IntCounter,
+    pub update_counts: IntCounter,
     pub reconcile_duration: HistogramVec,
 }
 
@@ -33,6 +35,16 @@ impl Metrics {
             )
             .unwrap(),
             reconcile_duration: reconcile_histogram,
+            create_counts: register_int_counter!(
+                "rsecrets_controller_create_counts_total",
+                "create counts"
+            )
+            .unwrap(),
+            update_counts: register_int_counter!(
+                "rsecrets_controller_update_counts_total",
+                "update counts"
+            )
+            .unwrap(),
         }
     }
 }

@@ -146,3 +146,42 @@ aws cloudformation create-stack --stack-name MyTestStack --template-body file://
           secret_field_name: test-cfn-stack
           output_key: S3Bucket
 ```
+
+## Development
+
+### Requirements
+
+1. [kind](https://kind.sigs.k8s.io/) or any other local k8s cluster
+2. [docker](https://www.docker.com/) 
+
+### Useful commands
+
+1. help
+
+```
+make help
+```
+
+2. bring up local mock environment
+
+```
+make mock-env
+```
+
+3. create a local k8s cluster using kind
+
+```
+make kind-cluster
+```
+
+3. initialize test data
+
+```
+make test-init
+```
+
+4. run test
+
+```
+make test
+```
