@@ -60,6 +60,7 @@ async fn reconcile(
             rsecret::add(client.clone(), &name, &ns).await?;
 
             rsecret::create_k8s_secret(client.clone(), &rs).await?;
+            ctx.get_ref().metrics.create_counts.inc();
             Ok(Action::requeue(Duration::from_secs(20)))
         }
         RSecretAction::Delete => {
@@ -86,6 +87,7 @@ async fn reconcile(
             } else {
                 info!("Updating rsecret {} in namespace {}", name, ns);
                 rsecret::update_k8s_secret(client.clone(), &rs, data_string.as_str()).await?;
+                ctx.get_ref().metrics.update_counts.inc();
             }
 
             Ok(Action::requeue(Duration::from_secs(20)))

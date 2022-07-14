@@ -72,6 +72,9 @@ init-test: ## init the test environment
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"bar"}}' http://127.0.0.1:8200/v1/secret/data/baz || true
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"test": "aaa"}}}' http://127.0.0.1:8200/v1/secret/data/foo || true
 
+mock-env: ## intialize the test environment locally
+	docker compose -f e2e/services.yaml up -d
+
 kind-cluster: ## create a kind cluster
 	kind create cluster --name local || true
 
@@ -81,8 +84,6 @@ fmt: ## format the code
 doc: ## generate the documentation
 	cargo doc
 
-crd: crdgen
-	kubectl apply -f config/crd.yaml
 ##@ Build
 
 controller: ## Run a controller from your host.
@@ -99,5 +100,5 @@ install-crd: crdgen ## install the CRDs
 kind-image-load: ## load the kind image
 	kind load docker-image ${IMG} --name local
 
-install-local: ## install the local cluster
-	
+install-local: install-crd manifest-local ## install the local cluster
+
