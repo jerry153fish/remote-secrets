@@ -2,14 +2,13 @@ use std::{collections::BTreeMap, str::FromStr};
 
 use aws_smithy_http::endpoint::Endpoint;
 use cached::proc_macro::cached;
-use futures::future::ok;
 use http::Uri;
 use k8s_openapi::ByteString;
 
-use crate::{utils, Backend};
+use crate::utils;
+use crd::Backend;
 
 use anyhow::{anyhow, Result};
-use std::panic;
 
 /// if using localstack as aws backend
 pub fn is_test_env() -> bool {

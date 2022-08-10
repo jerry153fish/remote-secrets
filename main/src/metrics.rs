@@ -1,7 +1,4 @@
-use prometheus::{
-    default_registry, proto::MetricFamily, register_histogram_vec, register_int_counter,
-    HistogramOpts, HistogramVec, IntCounter,
-};
+use prometheus::{register_histogram_vec, register_int_counter, HistogramVec, IntCounter};
 
 /// Metrics exposed on /metrics
 #[derive(Clone)]

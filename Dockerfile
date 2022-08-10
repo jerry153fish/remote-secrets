@@ -2,7 +2,8 @@ FROM ekidd/rust-musl-builder:stable as build
 
 WORKDIR /app
 
-COPY src src
+COPY crd crd
+COPY main main
 COPY Cargo.lock .
 COPY Cargo.toml .
 

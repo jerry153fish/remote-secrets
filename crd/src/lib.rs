@@ -8,18 +8,5 @@ pub use crd::Backend;
 pub use crd::BackendType;
 pub use crd::RSecret;
 pub use crd::RSecretStatus;
-
-pub mod aws;
-
-/// manager
-pub mod manager;
-pub use manager::Manager;
-
-/// metrics
-pub mod metrics;
-pub use metrics::Metrics;
-
-pub mod rsecret;
-pub mod utils;
-pub mod vault;
-pub mod web;
+pub use crd::RSecretdSpec;
+pub use crd::SecretData;

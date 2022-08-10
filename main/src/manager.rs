@@ -3,34 +3,28 @@ use futures::{future::BoxFuture, FutureExt, StreamExt};
 use k8s_openapi::api::core::v1::Secret;
 use k8s_openapi::ByteString;
 use kube::{
-    api::{Api, DeleteParams, ListParams, ObjectMeta, Patch, PatchParams, PostParams, ResourceExt},
+    api::{Api, ListParams, ResourceExt},
     runtime::{
         controller::{Action, Context, Controller},
-        events::{Event, EventType, Recorder, Reporter},
+        events::Reporter,
     },
-    Client, CustomResource, Resource,
+    Client, Resource,
 };
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-use std::{collections::HashMap, sync::Arc};
+use serde::Serialize;
+use std::sync::Arc;
 use tokio::{
     sync::RwLock,
     time::{Duration, Instant},
 };
 
-use serde_json::{Map, Value};
+use prometheus::{default_registry, proto::MetricFamily};
 
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+use log::{info, warn};
 
-use prometheus::{default_registry, labels, proto::MetricFamily};
+use crate::{rsecret, Metrics};
+use crd::RSecret;
 
-use log::{info, warn, LevelFilter};
-
-use crate::{rsecret, Metrics, RSecret, RSecretStatus};
-
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::collections::BTreeMap;
 
 async fn reconcile(

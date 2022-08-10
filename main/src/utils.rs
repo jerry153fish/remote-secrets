@@ -3,8 +3,8 @@ use k8s_openapi::ByteString;
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-use crate::crd::SecretData;
 use anyhow::Result;
+use crd::SecretData;
 
 pub fn get_json_string_nested_value(json_string: &str, path: &str) -> Result<String> {
     let json: Value = serde_json::from_str(json_string)?;

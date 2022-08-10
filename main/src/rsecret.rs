@@ -1,18 +1,17 @@
-use crate::{
-    aws::{
-        self, get_cloudformation_stack_secret_data, get_plain_text_secret_data,
-        get_secret_manager_secret_data, get_ssm_secret_data,
-    },
-    Backend, BackendType, Metrics, RSecret,
+use crate::aws::{
+    get_cloudformation_stack_secret_data, get_plain_text_secret_data,
+    get_secret_manager_secret_data, get_ssm_secret_data,
 };
 
-use anyhow::{anyhow, Result};
+use crd::{BackendType, RSecret};
+
+use anyhow::Result;
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::{
     api::{DeleteParams, Patch, PatchParams, PostParams},
     core::ObjectMeta,
 };
-use kube::{Api, Client, Error};
+use kube::{Api, Client};
 use serde_json::{json, Value};
 use std::collections::{hash_map::DefaultHasher, BTreeMap};
 use std::hash::{Hash, Hasher};
