@@ -1,6 +1,4 @@
-use actix_web::{
-    get, middleware, web::Data, App, HttpRequest, HttpResponse, HttpServer, Responder,
-};
+use actix_web::{get, web::Data, HttpRequest, HttpResponse, Responder};
 
 use crate::manager::Manager;
 

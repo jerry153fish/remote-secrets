@@ -1,15 +1,10 @@
-use std::{collections::BTreeMap, env::VarError};
+use std::collections::BTreeMap;
 
 use cached::proc_macro::cached;
 use k8s_openapi::ByteString;
 
-use std::str::FromStr;
-
-use aws_smithy_http::endpoint::Endpoint;
-use futures::future::ok;
-use http::Uri;
-
-use crate::{utils, Backend};
+use crate::utils;
+use crd::Backend;
 
 use crate::aws;
 use json_dotpath::DotPaths;
@@ -117,8 +112,8 @@ pub async fn get_vault_secret_data(backend: &Backend) -> Result<BTreeMap<String,
 // }
 
 mod tests {
+    #![allow(unused_imports)]
     use super::*;
-    use json_dotpath::DotPaths;
 
     #[tokio::test]
     async fn test_get_vault_value() {
