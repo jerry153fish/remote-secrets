@@ -4,7 +4,6 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 
 use anyhow::Result;
-use crd::SecretData;
 
 pub fn get_json_string_nested_value(json_string: &str, path: &str) -> Result<String> {
     let json: Value = serde_json::from_str(json_string)?;
@@ -29,41 +28,6 @@ pub fn get_json_string_as_secret_data(json_string: &str) -> Result<BTreeMap<Stri
     }
 
     Ok(secrets)
-}
-
-// TODO: a better way error handling
-pub fn rsecret_data_to_secret_data(
-    rsecret_data: &SecretData,
-    value_string: &str,
-) -> BTreeMap<String, ByteString> {
-    let mut secrets = BTreeMap::new();
-    if rsecret_data.secret_field_name.is_some() {
-        let key = rsecret_data.secret_field_name.clone().unwrap();
-
-        if rsecret_data.is_json_string.unwrap_or_default() == true {
-            if rsecret_data.remote_nest_path.is_some() {
-                let value = get_json_string_nested_value(
-                    value_string,
-                    &rsecret_data.remote_nest_path.clone().unwrap(),
-                );
-
-                match value {
-                    Ok(value) => {
-                        if !value.is_empty() {
-                            secrets.insert(key, ByteString(value.as_bytes().to_vec()));
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("{}", e);
-                    }
-                }
-            }
-        } else {
-            secrets.insert(key, ByteString(value_string.as_bytes().to_vec()));
-        }
-    }
-
-    secrets
 }
 
 #[cfg(test)]

@@ -1,11 +1,11 @@
 use std::{collections::BTreeMap, str::FromStr};
 
+use crate::rsecret;
 use aws_smithy_http::endpoint::Endpoint;
 use cached::proc_macro::cached;
 use http::Uri;
 use k8s_openapi::ByteString;
 
-use crate::utils;
 use crd::Backend;
 
 use anyhow::{anyhow, Result};
@@ -233,7 +233,7 @@ pub async fn get_secret_manager_secret_data(backend: &Backend) -> BTreeMap<Strin
             get_secretsmanager_parameter(secret_data.remote_value.clone()).await;
         match secret_manager_data {
             Ok(secret_manager_data) => {
-                let data = utils::rsecret_data_to_secret_data(secret_data, &secret_manager_data);
+                let data = rsecret::rsecret_data_to_secret_data(secret_data, &secret_manager_data);
 
                 secrets = data
                     .into_iter()
@@ -267,7 +267,7 @@ pub async fn get_cloudformation_stack_secret_data(
 
             match cloudformation_secret_data {
                 Ok(cloudformation_secret_data) => {
-                    let data = utils::rsecret_data_to_secret_data(
+                    let data = rsecret::rsecret_data_to_secret_data(
                         secret_data,
                         &cloudformation_secret_data,
                     );
@@ -312,7 +312,7 @@ pub async fn get_ssm_secret_data(backend: &Backend) -> BTreeMap<String, ByteStri
 
         match ssm_secret_data {
             Ok(ssm_secret_data) => {
-                let data = utils::rsecret_data_to_secret_data(secret_data, &ssm_secret_data);
+                let data = rsecret::rsecret_data_to_secret_data(secret_data, &ssm_secret_data);
 
                 secrets = data
                     .into_iter()

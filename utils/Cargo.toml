@@ -1,0 +1,13 @@
+[package]
+edition = "2021"
+name = "utils"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+json_dotpath = "1.1.0"
+k8s-openapi = {version = "0.14.0", features = ["v1_22"], default-features = false}
+serde = {version = "1.0.136", features = ["derive"]}
+serde_json = "1.0.79"
