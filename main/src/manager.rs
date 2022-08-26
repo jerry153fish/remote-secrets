@@ -68,20 +68,32 @@ async fn reconcile(
             info!("Updating rsecret {} in namespace {}", name, ns);
 
             let k8s_secrets: Api<Secret> = Api::namespaced(client.clone(), &ns);
-            let secret = k8s_secrets.get(&name).await?;
-            let old_hash_id = rsecret::get_hash_id(&secret);
+            let secret = k8s_secrets.get(&name).await;
 
-            let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
-            data = rsecret::get_secret_data(&rsecret, data).await;
-            let data_string = serde_json::to_string(&data).unwrap();
-            let new_hash_id = rsecret::calculate_hash(&data_string);
+            match secret {
+                Ok(secret) => {
+                    let old_hash_id = rsecret::get_hash_id(&secret);
 
-            if new_hash_id.to_string().eq(&old_hash_id) {
-                info!("No changes to rsecret {} in namespace {}", name, ns);
-            } else {
-                info!("Updating rsecret {} in namespace {}", name, ns);
-                rsecret::update_k8s_secret(client.clone(), &rs, data_string.as_str()).await?;
-                ctx.get_ref().metrics.update_counts.inc();
+                    let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
+                    data = rsecret::get_secret_data(&rsecret, data).await;
+                    let data_string = serde_json::to_string(&data).unwrap();
+                    let new_hash_id = rsecret::calculate_hash(&data_string);
+
+                    if new_hash_id.to_string().eq(&old_hash_id) {
+                        info!("No changes to rsecret {} in namespace {}", name, ns);
+                    } else {
+                        info!("Updating rsecret {} in namespace {}", name, ns);
+                        rsecret::update_k8s_secret(client.clone(), &rs, data_string.as_str())
+                            .await?;
+                        ctx.get_ref().metrics.update_counts.inc();
+                    }
+                }
+                Err(_error) => {
+                    // TODO: sort out the error type
+                    rsecret::add(client.clone(), &name, &ns).await?;
+
+                    rsecret::create_k8s_secret(client.clone(), &rs).await?;
+                }
             }
 
             Ok(Action::requeue(Duration::from_secs(20)))

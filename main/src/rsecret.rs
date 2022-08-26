@@ -1,9 +1,8 @@
 use crate::aws::{
-    get_cloudformation_stack_secret_data, get_plain_text_secret_data,
-    get_secret_manager_secret_data, get_ssm_secret_data,
+    get_cloudformation_stack_secret_data, get_secret_manager_secret_data, get_ssm_secret_data,
 };
 
-use crd::{BackendType, RSecret, SecretData};
+use crd::{BackendType, RSecret, RemoteValue, SecretData};
 
 use anyhow::Result;
 use k8s_openapi::{api::core::v1::Secret, ByteString};
@@ -12,6 +11,7 @@ use kube::{
     core::ObjectMeta,
 };
 use kube::{Api, Client};
+use plugins::plaintext::PlainText;
 use serde_json::{json, Value};
 use std::collections::{hash_map::DefaultHasher, BTreeMap};
 use std::hash::{Hash, Hasher};
@@ -26,7 +26,7 @@ pub async fn get_secret_data(
     for backend in rsecret.spec.resources.iter() {
         match backend.backend {
             BackendType::Plaintext => {
-                let plain_text_secret_data = get_plain_text_secret_data(backend);
+                let plain_text_secret_data = PlainText::from_backend(backend).get_value().await;
                 secrets = plain_text_secret_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())

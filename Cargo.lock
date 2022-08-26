@@ -1060,6 +1060,8 @@ dependencies = [
 name = "crd"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "async-trait",
  "chrono",
  "futures",
  "http",
@@ -2408,6 +2410,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 
 [[package]]
+name = "plugins"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "crd",
+ "futures",
+ "k8s-openapi",
+ "kube",
+ "serde",
+ "serde_json",
+ "tokio",
+ "utils",
+]
+
+[[package]]
 name = "polling"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2563,6 +2581,7 @@ dependencies = [
  "kube",
  "log",
  "log4rs",
+ "plugins",
  "prometheus",
  "reqwest",
  "schemars",

@@ -31,6 +31,7 @@ json_dotpath = "1.1.0"
 k8s-openapi = {version = "0.14.0", features = ["v1_22"], default-features = false}
 log = "0.4.6"
 log4rs = "1.1.1"
+plugins = {path = "../plugins"}
 prometheus = "0.13.0"
 reqwest = {version = "0.11", features = ["json"]}
 schemars = {version = "0.8.8", features = ["chrono"]}
