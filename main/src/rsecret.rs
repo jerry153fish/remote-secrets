@@ -3,7 +3,7 @@ use crate::aws::{
     get_secret_manager_secret_data, get_ssm_secret_data,
 };
 
-use crd::{BackendType, RSecret};
+use crd::{BackendType, RSecret, SecretData};
 
 use anyhow::Result;
 use k8s_openapi::{api::core::v1::Secret, ByteString};
@@ -15,6 +15,7 @@ use kube::{Api, Client};
 use serde_json::{json, Value};
 use std::collections::{hash_map::DefaultHasher, BTreeMap};
 use std::hash::{Hash, Hasher};
+use utils::value::get_json_string_nested_value;
 
 pub async fn get_secret_data(
     rsecret: &RSecret,
@@ -192,4 +193,39 @@ pub fn get_hash_id(secret: &Secret) -> String {
     let labels = secret.metadata.labels.as_ref().unwrap();
     let hash_id = labels.get("hash_id").unwrap();
     hash_id.to_string()
+}
+
+// TODO: a better way error handling
+pub fn rsecret_data_to_secret_data(
+    rsecret_data: &SecretData,
+    value_string: &str,
+) -> BTreeMap<String, ByteString> {
+    let mut secrets = BTreeMap::new();
+    if rsecret_data.secret_field_name.is_some() {
+        let key = rsecret_data.secret_field_name.clone().unwrap();
+
+        if rsecret_data.is_json_string.unwrap_or_default() == true {
+            if rsecret_data.remote_nest_path.is_some() {
+                let value = get_json_string_nested_value(
+                    value_string,
+                    &rsecret_data.remote_nest_path.clone().unwrap(),
+                );
+
+                match value {
+                    Ok(value) => {
+                        if !value.is_empty() {
+                            secrets.insert(key, ByteString(value.as_bytes().to_vec()));
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("{}", e);
+                    }
+                }
+            }
+        } else {
+            secrets.insert(key, ByteString(value_string.as_bytes().to_vec()));
+        }
+    }
+
+    secrets
 }
