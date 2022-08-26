@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY crd crd
 COPY main main
+COPY utils utils
 COPY Cargo.lock .
 COPY Cargo.toml .
 
