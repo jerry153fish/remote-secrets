@@ -1,6 +1,7 @@
 use prometheus::{register_histogram_vec, register_int_counter, HistogramVec, IntCounter};
 
 /// Metrics exposed on /metrics
+/// support global metrics
 #[derive(Clone)]
 pub struct Metrics {
     pub reconciliations: IntCounter,

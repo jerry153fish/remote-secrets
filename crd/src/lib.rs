@@ -9,4 +9,5 @@ pub use crd::BackendType;
 pub use crd::RSecret;
 pub use crd::RSecretStatus;
 pub use crd::RSecretdSpec;
+pub use crd::RemoteValue;
 pub use crd::SecretData;

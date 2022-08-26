@@ -206,24 +206,6 @@ pub async fn get_cloudformation_outputs_as_secret_data(
     Ok(secrets)
 }
 
-/// convert the plain text backend data to k8s secret data
-pub fn get_plain_text_secret_data(backend: &Backend) -> BTreeMap<String, ByteString> {
-    let mut secrets = BTreeMap::new();
-
-    for secret_data in backend.data.iter() {
-        if secret_data.secret_field_name.is_some() {
-            let key = secret_data.secret_field_name.clone().unwrap();
-
-            secrets.insert(
-                key,
-                ByteString(secret_data.remote_value.clone().as_bytes().to_vec()),
-            );
-        }
-    }
-
-    secrets
-}
-
 /// convert the secret manager data to k8s secret data
 pub async fn get_secret_manager_secret_data(backend: &Backend) -> BTreeMap<String, ByteString> {
     let mut secrets = BTreeMap::new();

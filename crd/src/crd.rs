@@ -1,4 +1,7 @@
+use anyhow::Result;
+use async_trait::async_trait;
 use chrono::prelude::*;
+use k8s_openapi::ByteString;
 use kube::{
     api::{Api, ListParams, Patch, PatchParams, ResourceExt},
     client::Client,
@@ -11,7 +14,10 @@ use kube::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
+};
 
 /// Our RSecret custom resource spec
 #[derive(CustomResource, Deserialize, Serialize, Clone, Debug, JsonSchema)]
@@ -89,4 +95,11 @@ pub enum BackendType {
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
 pub struct RSecretStatus {
     pub last_updated: Option<DateTime<Utc>>,
+}
+
+#[async_trait]
+pub trait RemoteValue {
+    async fn get_value(&self) -> BTreeMap<String, ByteString>;
+
+    fn from_backend(backend: &Backend) -> Self;
 }
