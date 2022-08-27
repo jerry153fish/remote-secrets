@@ -2415,10 +2415,20 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "aws-config",
+ "aws-sdk-appconfig",
+ "aws-sdk-cloudformation",
+ "aws-sdk-secretsmanager",
+ "aws-sdk-ssm",
+ "aws-smithy-http",
+ "aws-types",
+ "cached",
  "crd",
  "futures",
+ "http",
  "k8s-openapi",
  "kube",
+ "log",
  "serde",
  "serde_json",
  "tokio",
@@ -3417,8 +3427,11 @@ name = "utils"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "crd",
  "json_dotpath",
  "k8s-openapi",
+ "log",
+ "log4rs",
  "serde",
  "serde_json",
 ]
