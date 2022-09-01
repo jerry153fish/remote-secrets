@@ -21,27 +21,6 @@ pub fn localstack_endpoint() -> Endpoint {
     Endpoint::immutable(Uri::from_str(&url).unwrap())
 }
 
-/// get the ssm client
-pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
-    let mut ssm_config_builder = aws_sdk_ssm::config::Builder::from(conf);
-    if is_test_env() {
-        log::info!("Using localstack for ssm");
-        ssm_config_builder = ssm_config_builder.endpoint_resolver(localstack_endpoint())
-    }
-    aws_sdk_ssm::Client::from_conf(ssm_config_builder.build())
-}
-
-/// get the secret manager client
-pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmanager::Client {
-    let mut secretsmanager_config_builder = aws_sdk_secretsmanager::config::Builder::from(conf);
-    if is_test_env() {
-        log::info!("Using localstack for SecretsManager");
-        secretsmanager_config_builder =
-            secretsmanager_config_builder.endpoint_resolver(localstack_endpoint())
-    }
-    aws_sdk_secretsmanager::Client::from_conf(secretsmanager_config_builder.build())
-}
-
 /// get the cloudformation client
 pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformation::Client {
     let mut cloudformation_config_builder = aws_sdk_cloudformation::config::Builder::from(conf);
@@ -121,32 +100,6 @@ pub async fn get_appconfig_configuration_by_version(
     Ok(res)
 }
 
-/// get the data from the ssm parameter store by name
-/// Will cache the result for 60s
-#[cached(time = 60, result = true)]
-pub async fn get_ssm_parameter(name: String) -> Result<String> {
-    let shared_config = get_aws_sdk_config().await?;
-    let client = ssm_client(&shared_config);
-    let parmeter = client.get_parameter().name(name).send().await?;
-    let result = parmeter
-        .parameter()
-        .ok_or(anyhow!("no parameter found"))?
-        .value()
-        .unwrap_or_default();
-    Ok(result.to_string())
-}
-
-/// get the data from the secret manager store by name
-/// Will cache the result for 60s
-#[cached(time = 60, result = true)]
-pub async fn get_secretsmanager_parameter(name: String) -> Result<String> {
-    let shared_config = aws_config::from_env().load().await;
-    let client = secretsmanager_client(&shared_config);
-    let output = client.get_secret_value().secret_id(name).send().await?;
-    let result = output.secret_string().unwrap_or_default();
-    Ok(result.to_string())
-}
-
 /// get the data from the secret manager store by name
 /// Will cache the result for 60s
 #[cached(time = 60, result = true)]
@@ -207,31 +160,6 @@ pub async fn get_cloudformation_outputs_as_secret_data(
 }
 
 /// convert the secret manager data to k8s secret data
-pub async fn get_secret_manager_secret_data(backend: &Backend) -> BTreeMap<String, ByteString> {
-    let mut secrets = BTreeMap::new();
-
-    for secret_data in backend.data.iter() {
-        let secret_manager_data =
-            get_secretsmanager_parameter(secret_data.remote_value.clone()).await;
-        match secret_manager_data {
-            Ok(secret_manager_data) => {
-                let data = rsecret::rsecret_data_to_secret_data(secret_data, &secret_manager_data);
-
-                secrets = data
-                    .into_iter()
-                    .chain(secrets.clone().into_iter())
-                    .collect();
-            }
-            Err(err) => {
-                log::error!("{}", err);
-            }
-        }
-    }
-
-    secrets
-}
-
-/// convert the secret manager data to k8s secret data
 pub async fn get_cloudformation_stack_secret_data(
     backend: &Backend,
 ) -> BTreeMap<String, ByteString> {
@@ -285,50 +213,9 @@ pub async fn get_cloudformation_stack_secret_data(
     secrets
 }
 
-/// convert the ssm backend data to k8s secret data
-pub async fn get_ssm_secret_data(backend: &Backend) -> BTreeMap<String, ByteString> {
-    let mut secrets = BTreeMap::new();
-
-    for secret_data in backend.data.iter() {
-        let ssm_secret_data = get_ssm_parameter(secret_data.remote_value.clone()).await;
-
-        match ssm_secret_data {
-            Ok(ssm_secret_data) => {
-                let data = rsecret::rsecret_data_to_secret_data(secret_data, &ssm_secret_data);
-
-                secrets = data
-                    .into_iter()
-                    .chain(secrets.clone().into_iter())
-                    .collect();
-            }
-            Err(err) => {
-                log::error!("{}", err);
-            }
-        }
-    }
-
-    secrets
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[tokio::test]
-    async fn test_get_ssm_parameter() {
-        let result = get_ssm_parameter("MyStringParameter".to_string())
-            .await
-            .unwrap();
-        assert_eq!(result, "Vici");
-    }
-
-    #[tokio::test]
-    async fn test_get_secretsmanager_parameter() {
-        let result = get_secretsmanager_parameter("MyTestSecret".to_string())
-            .await
-            .unwrap();
-        assert_eq!(result, "Vicd");
-    }
 
     #[tokio::test]
     async fn test_get_cloudformation_stack() {

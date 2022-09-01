@@ -59,7 +59,7 @@ manifest-local-clean: ## Clean the manifest file for local testing.
 	kubectl kustomize config/local | kubectl delete -f -
 
 crdgen: ## Generate CRDs
-	cargo run --bin crdgen > config/crd.yaml
+	cargo run --bin crd > config/crd.yaml
 
 test: ## run the tests
 	export TEST_ENV=true && cargo test --all-targets -- --nocapture
@@ -101,4 +101,3 @@ kind-image-load: ## load the kind image
 	kind load docker-image ${IMG} --name local
 
 install-local: install-crd manifest-local ## install the local cluster
-

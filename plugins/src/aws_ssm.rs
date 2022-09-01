@@ -70,3 +70,43 @@ pub async fn get_ssm_parameter(name: String) -> Result<String> {
         .unwrap_or_default();
     Ok(result.to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json;
+
+    #[tokio::test]
+    async fn test_get_ssm_parameter() {
+        let result = get_ssm_parameter("MyStringParameter".to_string())
+            .await
+            .unwrap();
+        assert_eq!(result, "Vici");
+    }
+
+    #[tokio::test]
+    async fn test_ssm() {
+        let backend_str = r#"
+        {
+            "backend": "SSM",
+            "data": [
+                {
+                    "remote_value": "MyStringParameter",
+                    "secret_field_name": "value1"
+                }
+            ]
+        }"#;
+
+        let backend: Backend = serde_json::from_str(backend_str).unwrap();
+
+        let ssm = SSM::from_backend(&backend);
+
+        let result = ssm.get_value();
+
+        let _value = result.await;
+
+        println!("{:?}", _value);
+
+        assert!(true);
+    }
+}
