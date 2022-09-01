@@ -1,6 +1,4 @@
-use crate::aws::{
-    get_cloudformation_stack_secret_data, get_secret_manager_secret_data, get_ssm_secret_data,
-};
+use crate::aws::get_cloudformation_stack_secret_data;
 
 use crd::{BackendType, RSecret, RemoteValue, SecretData};
 
@@ -11,6 +9,8 @@ use kube::{
     core::ObjectMeta,
 };
 use kube::{Api, Client};
+use plugins::aws_secret_manager::SecretManager;
+use plugins::aws_ssm::SSM;
 use plugins::plaintext::PlainText;
 use serde_json::{json, Value};
 use std::collections::{hash_map::DefaultHasher, BTreeMap};
@@ -33,14 +33,15 @@ pub async fn get_secret_data(
                     .collect();
             }
             BackendType::SecretManager => {
-                let secret_manager_secret_data = get_secret_manager_secret_data(backend).await;
+                let secret_manager_secret_data =
+                    SecretManager::from_backend(backend).get_value().await;
                 secrets = secret_manager_secret_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())
                     .collect();
             }
             BackendType::SSM => {
-                let aws_ssm_data = get_ssm_secret_data(backend).await;
+                let aws_ssm_data = SSM::from_backend(backend).get_value().await;
                 secrets = aws_ssm_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())
