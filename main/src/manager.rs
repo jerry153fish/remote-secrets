@@ -21,8 +21,9 @@ use prometheus::{default_registry, proto::MetricFamily};
 
 use log::{info, warn};
 
-use crate::{rsecret, Metrics};
+use crate::rsecret;
 use crd::RSecret;
+use utils::metrics::Metrics;
 
 use anyhow::Result;
 use std::collections::BTreeMap;

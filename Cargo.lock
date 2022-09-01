@@ -3432,6 +3432,7 @@ dependencies = [
  "k8s-openapi",
  "log",
  "log4rs",
+ "prometheus",
  "serde",
  "serde_json",
 ]
