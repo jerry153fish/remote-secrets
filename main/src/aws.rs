@@ -1,12 +1,8 @@
-use std::{collections::BTreeMap, str::FromStr};
+use std::str::FromStr;
 
-use crate::rsecret;
 use aws_smithy_http::endpoint::Endpoint;
 use cached::proc_macro::cached;
 use http::Uri;
-use k8s_openapi::ByteString;
-
-use crd::Backend;
 
 use anyhow::{anyhow, Result};
 
@@ -19,17 +15,6 @@ pub fn is_test_env() -> bool {
 pub fn localstack_endpoint() -> Endpoint {
     let url = std::env::var("LOCALSTACK_URL").unwrap_or("http://localhost:4566/".to_string());
     Endpoint::immutable(Uri::from_str(&url).unwrap())
-}
-
-/// get the cloudformation client
-pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformation::Client {
-    let mut cloudformation_config_builder = aws_sdk_cloudformation::config::Builder::from(conf);
-    if is_test_env() {
-        log::info!("Using localstack for CloudFormation");
-        cloudformation_config_builder =
-            cloudformation_config_builder.endpoint_resolver(localstack_endpoint())
-    }
-    aws_sdk_cloudformation::Client::from_conf(cloudformation_config_builder.build())
 }
 
 /// get the cloudformation client
@@ -98,142 +83,4 @@ pub async fn get_appconfig_configuration_by_version(
     let res = std::string::String::from_utf8(result)?;
 
     Ok(res)
-}
-
-/// get the data from the secret manager store by name
-/// Will cache the result for 60s
-#[cached(time = 60, result = true)]
-pub async fn get_cloudformation_outputs(
-    stack_name: String,
-) -> Result<Vec<aws_sdk_cloudformation::model::Output>> {
-    let shared_config = aws_config::from_env().load().await;
-    let client = cloudformation_client(&shared_config);
-    let resp = client
-        .describe_stacks()
-        .stack_name(stack_name)
-        .send()
-        .await?;
-
-    let result = resp
-        .stacks()
-        .ok_or(anyhow!("no stacks found"))?
-        .first()
-        .ok_or(anyhow!("no first stack found"))?
-        .outputs()
-        .unwrap_or_default();
-
-    Ok(result.to_owned())
-}
-
-/// get the output value from the cloudformation stack
-pub async fn get_cloudformation_output(stack_name: String, output_key: String) -> Result<String> {
-    let outputs = get_cloudformation_outputs(stack_name).await?;
-    let result = outputs
-        .iter()
-        .find(|output| output.output_key().unwrap_or_default() == output_key)
-        .ok_or(anyhow!("no output found"))?
-        .output_value()
-        .unwrap_or_default();
-
-    Ok(result.to_string())
-}
-
-// get the secret data from the whole outputs of the cloudformation stack
-pub async fn get_cloudformation_outputs_as_secret_data(
-    stack_name: String,
-) -> Result<BTreeMap<String, ByteString>> {
-    let outputs = get_cloudformation_outputs(stack_name).await?;
-    let mut secrets = BTreeMap::new();
-    for output in outputs {
-        let output_key = output.output_key().unwrap_or_default().to_owned();
-        let output_value = ByteString(
-            output
-                .output_value()
-                .unwrap_or_default()
-                .as_bytes()
-                .to_vec(),
-        );
-        secrets.insert(output_key, output_value);
-    }
-
-    Ok(secrets)
-}
-
-/// convert the secret manager data to k8s secret data
-pub async fn get_cloudformation_stack_secret_data(
-    backend: &Backend,
-) -> BTreeMap<String, ByteString> {
-    let mut secrets = BTreeMap::new();
-
-    for secret_data in backend.data.iter() {
-        // specific the output value for 1-1 mapping k8s secret key
-        // TODO: support the output value is not dict
-        if secret_data.secret_field_name.is_some() && secret_data.output_key.is_some() {
-            let cloudformation_secret_data = get_cloudformation_output(
-                secret_data.remote_value.clone(),
-                secret_data.output_key.clone().unwrap(),
-            )
-            .await;
-
-            match cloudformation_secret_data {
-                Ok(cloudformation_secret_data) => {
-                    let data = rsecret::rsecret_data_to_secret_data(
-                        secret_data,
-                        &cloudformation_secret_data,
-                    );
-
-                    secrets = data
-                        .into_iter()
-                        .chain(secrets.clone().into_iter())
-                        .collect();
-                }
-                Err(err) => {
-                    log::error!("{}", err);
-                }
-            }
-        } else {
-            // insert the whole cloudformation outputs into k8s secret data
-            let cloudformation_secret_data =
-                get_cloudformation_outputs_as_secret_data(secret_data.remote_value.clone()).await;
-
-            match cloudformation_secret_data {
-                Ok(cloudformation_secret_data) => {
-                    secrets = cloudformation_secret_data
-                        .into_iter()
-                        .chain(secrets.clone().into_iter())
-                        .collect();
-                }
-                Err(err) => {
-                    log::error!("{}", err);
-                }
-            }
-        }
-    }
-
-    secrets
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_get_cloudformation_stack() {
-        let result = get_cloudformation_output("MyTestStack".to_string(), "S3Bucket".to_string())
-            .await
-            .unwrap();
-
-        assert_eq!(result, "S3Bucket");
-    }
-
-    #[tokio::test]
-    async fn test_get_cloudformation_outputs() {
-        let result = get_cloudformation_outputs_as_secret_data("MyTestStack".to_string())
-            .await
-            .unwrap();
-
-        let data_string = serde_json::to_string(&result).unwrap();
-
-        assert_eq!(data_string.contains("UzNCdWNrZXQ"), true);
-    }
 }

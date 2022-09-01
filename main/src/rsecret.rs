@@ -1,5 +1,3 @@
-use crate::aws::get_cloudformation_stack_secret_data;
-
 use crd::{BackendType, RSecret, RemoteValue, SecretData};
 
 use anyhow::Result;
@@ -9,6 +7,7 @@ use kube::{
     core::ObjectMeta,
 };
 use kube::{Api, Client};
+use plugins::aws_cfn::Cloudformation;
 use plugins::aws_secret_manager::SecretManager;
 use plugins::aws_ssm::SSM;
 use plugins::plaintext::PlainText;
@@ -48,7 +47,7 @@ pub async fn get_secret_data(
                     .collect();
             }
             BackendType::Cloudformation => {
-                let aws_cfn_data = get_cloudformation_stack_secret_data(backend).await;
+                let aws_cfn_data = Cloudformation::from_backend(backend).get_value().await;
                 secrets = aws_cfn_data
                     .into_iter()
                     .chain(secrets.clone().into_iter())
