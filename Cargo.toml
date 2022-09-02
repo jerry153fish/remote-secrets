@@ -5,4 +5,5 @@ members = [
   "crd",
   "utils",
   "plugins",
+  "k8s",
 ]
