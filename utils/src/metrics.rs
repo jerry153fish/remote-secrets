@@ -1,48 +1,26 @@
-use prometheus::{register_histogram_vec, register_int_counter, HistogramVec, IntCounter};
+use lazy_static::lazy_static;
+use prometheus::{register_int_counter, IntCounter, Registry};
 
-/// Metrics exposed on /metrics
-/// support global metrics
-#[derive(Clone)]
-pub struct Metrics {
-    pub reconciliations: IntCounter,
-    pub failures: IntCounter,
-    pub create_counts: IntCounter,
-    pub update_counts: IntCounter,
-    pub reconcile_duration: HistogramVec,
+lazy_static! {
+    pub static ref REGISTRY: Registry = Registry::new();
+    pub static ref RECONCILIATIONS: IntCounter = register_int_counter!(
+        "rsecrets_controller_reconciliations_total",
+        "reconciliations"
+    )
+    .unwrap();
+    pub static ref FAILURES: IntCounter = register_int_counter!(
+        "rsecrets_controller_reconciliation_errors_total",
+        "reconciliation errors"
+    )
+    .unwrap();
 }
 
-impl Metrics {
-    pub fn new() -> Self {
-        let reconcile_histogram = register_histogram_vec!(
-            "rsecrets_controller_reconcile_duration_seconds",
-            "The duration of reconcile to complete in seconds",
-            &[],
-            vec![0.01, 0.1, 0.25, 0.5, 1., 5., 15., 60.]
-        )
-        .unwrap();
+pub fn register_custom_metrics() {
+    REGISTRY
+        .register(Box::new(RECONCILIATIONS.clone()))
+        .expect("collector can be registered");
 
-        Metrics {
-            reconciliations: register_int_counter!(
-                "rsecrets_controller_reconciliations_total",
-                "reconciliations"
-            )
-            .unwrap(),
-            failures: register_int_counter!(
-                "rsecrets_controller_reconciliation_errors_total",
-                "reconciliation errors"
-            )
-            .unwrap(),
-            reconcile_duration: reconcile_histogram,
-            create_counts: register_int_counter!(
-                "rsecrets_controller_create_counts_total",
-                "create counts"
-            )
-            .unwrap(),
-            update_counts: register_int_counter!(
-                "rsecrets_controller_update_counts_total",
-                "update counts"
-            )
-            .unwrap(),
-        }
-    }
+    REGISTRY
+        .register(Box::new(FAILURES.clone()))
+        .expect("collector can be registered");
 }

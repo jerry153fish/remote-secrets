@@ -12,18 +12,14 @@ use kube::{
 };
 use serde::Serialize;
 use std::sync::Arc;
-use tokio::{
-    sync::RwLock,
-    time::{Duration, Instant},
-};
-
-use prometheus::{default_registry, proto::MetricFamily};
+use tokio::{sync::RwLock, time::Duration};
 
 use log::{info, warn};
 
 use crate::rsecret;
 use crd::RSecret;
-use utils::metrics::Metrics;
+use utils::metrics::FAILURES;
+use utils::metrics::RECONCILIATIONS;
 
 use anyhow::Result;
 use std::collections::BTreeMap;
@@ -32,8 +28,8 @@ async fn reconcile(
     rsecret: Arc<RSecret>,
     ctx: Context<ContextData>,
 ) -> Result<Action, kube::Error> {
-    let start = Instant::now();
-    ctx.get_ref().metrics.reconciliations.inc();
+    // let start = Instant::now();
+    RECONCILIATIONS.inc();
 
     let client = ctx.get_ref().client.clone();
     ctx.get_ref().state.write().await.last_event = Utc::now();
@@ -42,12 +38,7 @@ async fn reconcile(
 
     let rs = rsecret.as_ref().clone();
 
-    let duration = start.elapsed().as_millis() as f64 / 1000.0;
-    ctx.get_ref()
-        .metrics
-        .reconcile_duration
-        .with_label_values(&[])
-        .observe(duration);
+    // let duration = start.elapsed().as_millis() as f64 / 1000.0;
 
     // Performs action as decided by the `determine_action` function.
     return match determine_action(&rsecret) {
@@ -55,7 +46,7 @@ async fn reconcile(
             rsecret::add(client.clone(), &name, &ns).await?;
 
             rsecret::create_k8s_secret(client.clone(), &rs).await?;
-            ctx.get_ref().metrics.create_counts.inc();
+            // ctx.get_ref().metrics.create_counts.inc();
             Ok(Action::requeue(Duration::from_secs(20)))
         }
         RSecretAction::Delete => {
@@ -86,7 +77,7 @@ async fn reconcile(
                         info!("Updating rsecret {} in namespace {}", name, ns);
                         rsecret::update_k8s_secret(client.clone(), &rs, data_string.as_str())
                             .await?;
-                        ctx.get_ref().metrics.update_counts.inc();
+                        // ctx.get_ref().metrics.update_counts.inc();
                     }
                 }
                 Err(_error) => {
@@ -123,9 +114,9 @@ fn determine_action(rsecret: &RSecret) -> RSecretAction {
     };
 }
 
-fn error_policy(error: &kube::Error, ctx: Context<ContextData>) -> Action {
+fn error_policy(error: &kube::Error, _ctx: Context<ContextData>) -> Action {
     warn!("reconcile failed: {:?}", error);
-    ctx.get_ref().metrics.failures.inc();
+    FAILURES.inc();
     Action::requeue(Duration::from_secs(5 * 60))
 }
 
@@ -135,9 +126,6 @@ pub struct ContextData {
     client: Client,
 
     state: Arc<RwLock<State>>,
-
-    /// Various prometheus metrics
-    metrics: Metrics,
 }
 
 /// In-memory reconciler state exposed on /
@@ -176,10 +164,8 @@ impl Manager {
             .expect("Expected a valid KUBECONFIG environment variable.");
 
         let state = Arc::new(RwLock::new(State::new()));
-        let metrics = Metrics::new();
         let context = Context::new(ContextData {
             client: client.clone(),
-            metrics: metrics.clone(),
             state: state.clone(),
         });
 
@@ -199,11 +185,6 @@ impl Manager {
             .boxed();
 
         (Self { state }, drainer)
-    }
-
-    /// Metrics getter
-    pub fn metrics(&self) -> Vec<MetricFamily> {
-        default_registry().gather()
     }
 
     /// State getter
