@@ -3,6 +3,7 @@ use actix_web::{get, web::Data, HttpRequest, HttpResponse, Responder};
 use crate::manager::Manager;
 
 use prometheus::{Encoder, TextEncoder};
+use utils::metrics::REGISTRY;
 
 #[get("/healthz")]
 pub async fn health(_: HttpRequest) -> impl Responder {
@@ -15,10 +16,9 @@ pub async fn ready(_: HttpRequest) -> impl Responder {
 }
 
 #[get("/metrics")]
-pub async fn metrics(c: Data<Manager>, _req: HttpRequest) -> impl Responder {
-    let metrics = c.metrics();
+pub async fn metrics(_c: Data<Manager>, _req: HttpRequest) -> impl Responder {
     let encoder = TextEncoder::new();
     let mut buffer = vec![];
-    encoder.encode(&metrics, &mut buffer).unwrap();
+    encoder.encode(&REGISTRY.gather(), &mut buffer).unwrap();
     HttpResponse::Ok().body(buffer)
 }

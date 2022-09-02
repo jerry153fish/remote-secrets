@@ -3430,6 +3430,7 @@ dependencies = [
  "crd",
  "json_dotpath",
  "k8s-openapi",
+ "lazy_static",
  "log",
  "log4rs",
  "prometheus",

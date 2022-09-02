@@ -1,6 +1,7 @@
 use log::{info, warn};
 
 use utils::log::init_log;
+use utils::metrics::register_custom_metrics;
 
 use actix_web::{middleware, web::Data, App, HttpServer};
 
@@ -10,6 +11,7 @@ pub use controller::*;
 #[tokio::main]
 async fn main() -> Result<()> {
     init_log()?;
+    register_custom_metrics();
     info!("Starting controller");
 
     let (manager, drainer) = Manager::new().await;
