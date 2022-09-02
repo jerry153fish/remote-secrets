@@ -16,8 +16,8 @@ use tokio::{sync::RwLock, time::Duration};
 
 use log::{info, warn};
 
-use crate::rsecret;
 use crd::RSecret;
+use k8s::secret;
 use utils::metrics::FAILURES;
 use utils::metrics::RECONCILIATIONS;
 
@@ -43,16 +43,16 @@ async fn reconcile(
     // Performs action as decided by the `determine_action` function.
     return match determine_action(&rsecret) {
         RSecretAction::Create => {
-            rsecret::add(client.clone(), &name, &ns).await?;
+            secret::add(client.clone(), &name, &ns).await?;
 
-            rsecret::create_k8s_secret(client.clone(), &rs).await?;
+            secret::create_k8s_secret(client.clone(), &rs).await?;
             // ctx.get_ref().metrics.create_counts.inc();
             Ok(Action::requeue(Duration::from_secs(20)))
         }
         RSecretAction::Delete => {
-            rsecret::delete_k8s_secret(client.clone(), &name, &ns).await?;
+            secret::delete_k8s_secret(client.clone(), &name, &ns).await?;
 
-            rsecret::delete(client.clone(), &rsecret.name(), &ns).await?;
+            secret::delete(client.clone(), &rsecret.name(), &ns).await?;
             Ok(Action::await_change())
         }
 
@@ -64,27 +64,27 @@ async fn reconcile(
 
             match secret {
                 Ok(secret) => {
-                    let old_hash_id = rsecret::get_hash_id(&secret);
+                    let old_hash_id = secret::get_hash_id(&secret);
 
                     let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
-                    data = rsecret::get_secret_data(&rsecret, data).await;
+                    data = secret::get_secret_data(&rsecret, data).await;
                     let data_string = serde_json::to_string(&data).unwrap();
-                    let new_hash_id = rsecret::calculate_hash(&data_string);
+                    let new_hash_id = secret::calculate_hash(&data_string);
 
                     if new_hash_id.to_string().eq(&old_hash_id) {
                         info!("No changes to rsecret {} in namespace {}", name, ns);
                     } else {
                         info!("Updating rsecret {} in namespace {}", name, ns);
-                        rsecret::update_k8s_secret(client.clone(), &rs, data_string.as_str())
+                        secret::update_k8s_secret(client.clone(), &rs, data_string.as_str())
                             .await?;
                         // ctx.get_ref().metrics.update_counts.inc();
                     }
                 }
                 Err(_error) => {
                     // TODO: sort out the error type
-                    rsecret::add(client.clone(), &name, &ns).await?;
+                    secret::add(client.clone(), &name, &ns).await?;
 
-                    rsecret::create_k8s_secret(client.clone(), &rs).await?;
+                    secret::create_k8s_secret(client.clone(), &rs).await?;
                 }
             }
 

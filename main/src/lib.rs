@@ -4,6 +4,5 @@ pub mod aws;
 pub mod manager;
 pub use manager::Manager;
 
-pub mod rsecret;
 pub mod vault;
 pub mod web;

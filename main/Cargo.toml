@@ -28,6 +28,7 @@ crd = {path = "../crd"}
 futures = "0.3"
 http = "0.2"
 json_dotpath = "1.1.0"
+k8s = {path = "../k8s"}
 k8s-openapi = {version = "0.14.0", features = ["v1_22"], default-features = false}
 log = "0.4.6"
 log4rs = "1.1.1"
