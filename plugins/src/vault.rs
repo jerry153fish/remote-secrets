@@ -1,15 +1,53 @@
+use crate::aws_common::is_test_env;
+use async_trait::async_trait;
 use std::collections::BTreeMap;
 
 use cached::proc_macro::cached;
 use k8s_openapi::ByteString;
 
-use crd::Backend;
-use k8s::secret;
-
-use crate::aws;
+use crd::{Backend, RemoteValue, SecretData};
 use json_dotpath::DotPaths;
 
+use utils::value::get_secret_data;
+
 use anyhow::Result;
+
+#[derive(Clone, Debug)]
+pub struct Vault {
+    data: Vec<SecretData>,
+}
+
+#[async_trait]
+impl RemoteValue for Vault {
+    fn from_backend(backend: &Backend) -> Vault {
+        Vault {
+            data: backend.data.clone(),
+        }
+    }
+
+    async fn get_value(&self) -> BTreeMap<String, ByteString> {
+        let mut secrets = BTreeMap::new();
+
+        for secret_data in self.data.iter() {
+            let vault_data = get_vault_value(secret_data.remote_value.clone()).await;
+            match vault_data {
+                Ok(vault_data) => {
+                    let data = get_secret_data(secret_data, &vault_data);
+
+                    secrets = data
+                        .into_iter()
+                        .chain(secrets.clone().into_iter())
+                        .collect();
+                }
+                Err(err) => {
+                    log::error!("{}", err);
+                }
+            }
+        }
+
+        secrets
+    }
+}
 
 #[cached(time = 60, result = true)]
 pub async fn get_vault_value(path: String) -> Result<String> {
@@ -27,7 +65,7 @@ pub async fn get_vault_value(path: String) -> Result<String> {
 
 pub fn get_vault_secret_endpoint() -> Result<String> {
     let url;
-    if aws::is_test_env() {
+    if is_test_env() {
         url = std::env::var("VAULT_ADDR").unwrap_or("http://localhost:8200".to_string());
     } else {
         url = std::env::var("VAULT_ADDR")?;
@@ -41,7 +79,7 @@ pub fn get_vault_secret_endpoint() -> Result<String> {
 
 pub fn get_vault_token() -> Result<String> {
     let token;
-    if aws::is_test_env() {
+    if is_test_env() {
         token = std::env::var("VAULT_TOKEN").unwrap_or("vault-plaintext-root-token".to_string());
     } else {
         token = std::env::var("VAULT_TOKEN")?;
@@ -61,55 +99,6 @@ pub fn get_vault_client(key: String) -> Result<reqwest::RequestBuilder> {
 
     Ok(client)
 }
-
-/// convert the vault data to k8s secret data
-pub async fn get_vault_secret_data(backend: &Backend) -> Result<BTreeMap<String, ByteString>> {
-    let mut secrets = BTreeMap::new();
-
-    for secret_data in backend.data.iter() {
-        let vault_data = get_vault_value(secret_data.remote_value.clone()).await;
-        match vault_data {
-            Ok(vault_data) => {
-                let data = secret::rsecret_data_to_secret_data(secret_data, &vault_data);
-
-                secrets = data
-                    .into_iter()
-                    .chain(secrets.clone().into_iter())
-                    .collect();
-            }
-            Err(err) => {
-                log::error!("{}", err);
-            }
-        }
-    }
-
-    Ok(secrets)
-}
-/// convert the vault backend data to k8s secret data
-// pub fn get_vault_secret_data(
-//     backend: &Backend,
-// ) -> Result<BTreeMap<String, ByteString>, hashicorp_vault::Error> {
-//     let mut secrets = BTreeMap::new();
-
-//     for secret_data in backend.data.iter() {
-//         let vault_data = get_vault_value(secret_data.remote_value.as_str());
-//         match vault_data {
-//             Ok(vault_data) => {
-//                 let data = utils::rsecret_data_to_secret_data(secret_data, &vault_data).unwrap();
-
-//                 secrets = data
-//                     .into_iter()
-//                     .chain(secrets.clone().into_iter())
-//                     .collect();
-//             }
-//             Err(err) => {
-//                 log::error!("{}", err);
-//             }
-//         }
-//     }
-
-//     Ok(secrets)
-// }
 
 mod tests {
     #![allow(unused_imports)]
