@@ -6,6 +6,7 @@ COPY crd crd
 COPY main main
 COPY utils utils
 COPY plugins plugins
+COPY k8s k8s
 COPY Cargo.lock .
 COPY Cargo.toml .
 
