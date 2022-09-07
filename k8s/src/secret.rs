@@ -11,10 +11,11 @@ use plugins::aws_cfn::Cloudformation;
 use plugins::aws_secret_manager::SecretManager;
 use plugins::aws_ssm::SSM;
 use plugins::plaintext::PlainText;
+use plugins::pulumi::Pulumi;
 use serde_json::{json, Value};
 use std::collections::{hash_map::DefaultHasher, BTreeMap};
 use std::hash::{Hash, Hasher};
-use utils::value::get_json_string_nested_value;
+use utils::value::{get_json_string_nested_value, merge_secret_data};
 
 pub async fn get_secret_data(
     rsecret: &RSecret,
@@ -26,38 +27,30 @@ pub async fn get_secret_data(
         match backend.backend {
             BackendType::Plaintext => {
                 let plain_text_secret_data = PlainText::from_backend(backend).get_value().await;
-                secrets = plain_text_secret_data
-                    .into_iter()
-                    .chain(secrets.clone().into_iter())
-                    .collect();
+                secrets = merge_secret_data(plain_text_secret_data, secrets);
             }
             BackendType::SecretManager => {
                 let secret_manager_secret_data =
                     SecretManager::from_backend(backend).get_value().await;
-                secrets = secret_manager_secret_data
-                    .into_iter()
-                    .chain(secrets.clone().into_iter())
-                    .collect();
+                secrets = merge_secret_data(secret_manager_secret_data, secrets);
             }
             BackendType::SSM => {
                 let aws_ssm_data = SSM::from_backend(backend).get_value().await;
-                secrets = aws_ssm_data
-                    .into_iter()
-                    .chain(secrets.clone().into_iter())
-                    .collect();
+                secrets = merge_secret_data(aws_ssm_data, secrets);
             }
             BackendType::Cloudformation => {
                 let aws_cfn_data = Cloudformation::from_backend(backend).get_value().await;
-                secrets = aws_cfn_data
-                    .into_iter()
-                    .chain(secrets.clone().into_iter())
-                    .collect();
+                secrets = merge_secret_data(aws_cfn_data, secrets);
+            }
+            BackendType::Pulumi => {
+                let pulumi_data = Pulumi::from_backend(backend).get_value().await;
+                secrets = merge_secret_data(pulumi_data, secrets);
             }
             _ => {}
         };
     }
 
-    return secrets.into_iter().chain(data.into_iter()).collect();
+    return merge_secret_data(secrets, data);
 }
 
 /// Adds a finalizer record into an `RSecret` kind of resource. If the finalizer already exists,
