@@ -65,6 +65,16 @@ pub fn get_secret_data(
     secrets
 }
 
+pub fn merge_secret_data(
+    to_merge: BTreeMap<String, ByteString>,
+    merged: BTreeMap<String, ByteString>,
+) -> BTreeMap<String, ByteString> {
+    to_merge
+        .into_iter()
+        .chain(merged.clone().into_iter())
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
