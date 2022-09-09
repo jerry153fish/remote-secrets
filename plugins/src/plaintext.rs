@@ -21,12 +21,12 @@ impl RemoteValue for PlainText {
         let mut secrets = BTreeMap::new();
 
         for secret_data in self.data.iter() {
-            if secret_data.secret_field_name.is_some() {
-                let key = secret_data.secret_field_name.clone().unwrap();
+            if secret_data.key.is_some() {
+                let key = secret_data.key.clone().unwrap();
 
                 secrets.insert(
                     key,
-                    ByteString(secret_data.remote_value.clone().as_bytes().to_vec()),
+                    ByteString(secret_data.value.clone().as_bytes().to_vec()),
                 );
             }
         }
@@ -47,12 +47,12 @@ mod tests {
             "backend": "Plaintext",
             "data": [
                 {
-                    "remote_value": "test1",
-                    "secret_field_name": "value1"
+                    "value": "test1",
+                    "key": "value1"
                 },
                 {
-                    "remote_value": "test2",
-                    "secret_field_name": "value2"
+                    "value": "test2",
+                    "key": "value2"
                 }
             ]
         }"#;

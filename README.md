@@ -54,10 +54,10 @@ spec:
   resources:
     - backend: Plaintext
       data:
-        - remote_value: test-rsecret-plaintext-value
-          secret_field_name: test-rsecret-plaintext
-        - remote_value: test-rsecret-plaintext-value-1
-          secret_field_name: test-rsecret-plaintext-1
+        - value: test-rsecret-plaintext-value
+          key: test-rsecret-plaintext
+        - value: test-rsecret-plaintext-value-1
+          key: test-rsecret-plaintext-1
 
 ```
 
@@ -103,8 +103,8 @@ aws ssm put-parameter --name MyStringParameter --type "String" --value "Vici"
 ```
     - backend: SSM
       data:
-        - remote_value: MyStringParameter
-          secret_field_name: test-rsecret-ssm-param
+        - value: MyStringParameter
+          key: test-rsecret-ssm-param
 ```
 
 ### AWS Secret Manager
@@ -122,8 +122,8 @@ aws secretsmanager create-secret --name MyTestSecret --secret-string "Vicd"
 ```
     - backend: SecretManager
       data:
-        - remote_value: MyTestSecret
-          secret_field_name: test-rsecret-secretmanager
+        - value: MyTestSecret
+          key: test-rsecret-secretmanager
 ```
 
 ### AWS Cloudformation outputs
@@ -141,10 +141,10 @@ aws cloudformation create-stack --stack-name MyTestStack --template-body file://
 ```
     - backend: Cloudformation
       data:
-        - remote_value: MyTestStack # import all the outputs
-        - remote_value: MyTestStack # import specific output key
-          secret_field_name: test-cfn-stack
-          output_key: S3Bucket
+        - value: MyTestStack # import all the outputs
+        - value: MyTestStack # import specific output key
+          key: test-cfn-stack
+          remote_path: S3Bucket
 ```
 
 ## Development

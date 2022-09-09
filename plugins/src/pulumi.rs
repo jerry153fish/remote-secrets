@@ -32,10 +32,10 @@ impl RemoteValue for Pulumi {
         for secret_data in self.data.iter() {
             // specific the output value for 1-1 mapping k8s secret key
             // TODO: support the output value is not dict
-            if secret_data.secret_field_name.is_some() && secret_data.output_key.is_some() {
+            if secret_data.key.is_some() && secret_data.remote_path.is_some() {
                 let data = get_pulumi_output(
-                    secret_data.remote_value.clone(),
-                    secret_data.output_key.clone().unwrap(),
+                    secret_data.value.clone(),
+                    secret_data.remote_path.clone().unwrap(),
                     self.token.clone(),
                 )
                 .await;
@@ -56,7 +56,7 @@ impl RemoteValue for Pulumi {
             } else {
                 // insert the whole cloudformation outputs into k8s secret data
                 let data = get_pulumi_outputs_as_secret_data(
-                    secret_data.remote_value.clone(),
+                    secret_data.value.clone(),
                     self.token.clone(),
                 )
                 .await;
@@ -129,12 +129,12 @@ pub fn get_pulumi_client(
 /// get the output value from the cloudformation stack
 pub async fn get_pulumi_output(
     path: String,
-    output_key: String,
+    remote_path: String,
     pulumi_token: Option<String>,
 ) -> Result<String> {
     let outputs = get_pulumi_outputs(path, pulumi_token).await?;
     let result = outputs
-        .dot_get::<serde_json::Value>(output_key.as_ref())
+        .dot_get::<serde_json::Value>(remote_path.as_ref())
         .unwrap()
         .unwrap();
 
@@ -149,10 +149,10 @@ pub async fn get_pulumi_outputs_as_secret_data(
     let outputs = get_pulumi_outputs(path, pulumi_token).await?;
     let mut secrets = BTreeMap::new();
     for (key, value) in outputs.as_object().unwrap() {
-        let output_key = key.to_string();
+        let remote_path = key.to_string();
         let value_string = value.to_string();
         let output_value = ByteString(value_string.as_bytes().to_vec());
-        secrets.insert(output_key, output_value);
+        secrets.insert(remote_path, output_value);
     }
 
     Ok(secrets)

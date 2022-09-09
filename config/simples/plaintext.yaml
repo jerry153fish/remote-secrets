@@ -8,7 +8,7 @@ spec:
   resources:
     - backend: Plaintext
       data:
-        - remote_value: test-rsecret-plaintext-value
-          secret_field_name: test-rsecret-plaintext
-        - remote_value: test-rsecret-plaintext-value-1
-          secret_field_name: test-rsecret-plaintext-1
+        - value: test-rsecret-plaintext-value
+          key: test-rsecret-plaintext
+        - value: test-rsecret-plaintext-value-1
+          key: test-rsecret-plaintext-1

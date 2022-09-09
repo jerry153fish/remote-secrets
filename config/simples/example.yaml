@@ -8,27 +8,27 @@ spec:
   resources:
     - backend: SSM
       data:
-        - remote_value: MyStringParameter
-          secret_field_name: test-rsecret-ssm-param
-        - remote_value: MyStringParameter
-          secret_field_name: test-rsecret-ssm-param1
+        - value: MyStringParameter
+          key: test-rsecret-ssm-param
+        - value: MyStringParameter
+          key: test-rsecret-ssm-param1
     - backend: Plaintext
       data:
-        - remote_value: test-rsecret-plaintext-value
-          secret_field_name: test-rsecret-plaintext
-        - remote_value: test-rsecret-plaintext-value-1
-          secret_field_name: test-rsecret-plaintext-1
+        - value: test-rsecret-plaintext-value
+          key: test-rsecret-plaintext
+        - value: test-rsecret-plaintext-value-1
+          key: test-rsecret-plaintext-1
     - backend: SecretManager
       data:
-        - remote_value: MyTestSecret
-          secret_field_name: test-rsecret-secretmanager
-        - remote_value: MyTestSecret
-          secret_field_name: test-rsecret-secretmanager1
-        - remote_value: NotExisting
-          secret_field_name: test-rsecret-secretmanager-not-existing
+        - value: MyTestSecret
+          key: test-rsecret-secretmanager
+        - value: MyTestSecret
+          key: test-rsecret-secretmanager1
+        - value: NotExisting
+          key: test-rsecret-secretmanager-not-existing
     - backend: Cloudformation
       data:
-        - remote_value: MyTestStack
-        - remote_value: MyTestStack
-          secret_field_name: test-cfn-stack
-          output_key: S3Bucket
+        - value: MyTestStack
+        - value: MyTestStack
+          key: test-cfn-stack
+          remote_path: S3Bucket

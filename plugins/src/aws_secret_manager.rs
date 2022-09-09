@@ -25,7 +25,7 @@ impl RemoteValue for SecretManager {
         let mut secrets = BTreeMap::new();
 
         for secret_data in self.data.iter() {
-            let data = get_secretsmanager_parameter(secret_data.remote_value.clone()).await;
+            let data = get_secretsmanager_parameter(secret_data.value.clone()).await;
 
             match data {
                 Ok(data) => {
@@ -88,8 +88,8 @@ mod tests {
             "backend": "SecretManager",
             "data": [
                 {
-                    "remote_value": "MyTestSecret",
-                    "secret_field_name": "value2"
+                    "value": "MyTestSecret",
+                    "key": "value2"
                 }
             ]
         }"#;
