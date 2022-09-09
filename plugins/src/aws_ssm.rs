@@ -25,7 +25,7 @@ impl RemoteValue for SSM {
         let mut secrets = BTreeMap::new();
 
         for secret_data in self.data.iter() {
-            let ssm_secret_data = get_ssm_parameter(secret_data.remote_value.clone()).await;
+            let ssm_secret_data = get_ssm_parameter(secret_data.value.clone()).await;
 
             match ssm_secret_data {
                 Ok(ssm_secret_data) => {
@@ -91,8 +91,8 @@ mod tests {
             "backend": "SSM",
             "data": [
                 {
-                    "remote_value": "MyStringParameter",
-                    "secret_field_name": "value1"
+                    "value": "MyStringParameter",
+                    "key": "value1"
                 }
             ]
         }"#;

@@ -52,20 +52,16 @@ spec:
                               description: whether the remote data is jsonstrinified string or not
                               nullable: true
                               type: boolean
-                            output_key:
-                              description: output key for cloudformation or pulumi
-                              nullable: true
-                              type: string
-                            remote_nest_path:
-                              description: "nested path for the remote data, if remote value is a json"
-                              nullable: true
-                              type: string
-                            remote_value:
-                              description: for ssm / paramstore this is the name of the key for cloudformation and pulumi this is the stack name for plaintext this is the value of the secret for appconfig this is the application id
-                              type: string
-                            secret_field_name:
+                            key:
                               description: secret field name
                               nullable: true
+                              type: string
+                            remote_path:
+                              description: "path for the remote data, if remote value is a json for cloudformation and pulumi should be the outputs path"
+                              nullable: true
+                              type: string
+                            value:
+                              description: for ssm / paramstore this is the name of the key for cloudformation and pulumi this is the stack name for plaintext this is the value of the secret for appconfig this is the application id
                               type: string
                             version_number:
                               description: version number for the Hosted configuration versions for appconfig
@@ -73,7 +69,7 @@ spec:
                               nullable: true
                               type: integer
                           required:
-                            - remote_value
+                            - value
                           type: object
                         type: array
                       pulumi_token:

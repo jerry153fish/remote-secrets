@@ -27,10 +27,10 @@ impl RemoteValue for Cloudformation {
         for secret_data in self.data.iter() {
             // specific the output value for 1-1 mapping k8s secret key
             // TODO: support the output value is not dict
-            if secret_data.secret_field_name.is_some() && secret_data.output_key.is_some() {
+            if secret_data.key.is_some() && secret_data.remote_path.is_some() {
                 let cloudformation_secret_data = get_cloudformation_output(
-                    secret_data.remote_value.clone(),
-                    secret_data.output_key.clone().unwrap(),
+                    secret_data.value.clone(),
+                    secret_data.remote_path.clone().unwrap(),
                 )
                 .await;
 
@@ -50,8 +50,7 @@ impl RemoteValue for Cloudformation {
             } else {
                 // insert the whole cloudformation outputs into k8s secret data
                 let cloudformation_secret_data =
-                    get_cloudformation_outputs_as_secret_data(secret_data.remote_value.clone())
-                        .await;
+                    get_cloudformation_outputs_as_secret_data(secret_data.value.clone()).await;
 
                 match cloudformation_secret_data {
                     Ok(cloudformation_secret_data) => {
@@ -108,11 +107,11 @@ pub async fn get_cloudformation_outputs(
 }
 
 /// get the output value from the cloudformation stack
-pub async fn get_cloudformation_output(stack_name: String, output_key: String) -> Result<String> {
+pub async fn get_cloudformation_output(stack_name: String, remote_path: String) -> Result<String> {
     let outputs = get_cloudformation_outputs(stack_name).await?;
     let result = outputs
         .iter()
-        .find(|output| output.output_key().unwrap_or_default() == output_key)
+        .find(|output| output.output_key().unwrap_or_default() == remote_path)
         .ok_or(anyhow!("no output found"))?
         .output_value()
         .unwrap_or_default();
@@ -127,7 +126,7 @@ pub async fn get_cloudformation_outputs_as_secret_data(
     let outputs = get_cloudformation_outputs(stack_name).await?;
     let mut secrets = BTreeMap::new();
     for output in outputs {
-        let output_key = output.output_key().unwrap_or_default().to_owned();
+        let remote_path = output.output_key().unwrap_or_default().to_owned();
         let output_value = ByteString(
             output
                 .output_value()
@@ -135,7 +134,7 @@ pub async fn get_cloudformation_outputs_as_secret_data(
                 .as_bytes()
                 .to_vec(),
         );
-        secrets.insert(output_key, output_value);
+        secrets.insert(remote_path, output_value);
     }
 
     Ok(secrets)
@@ -173,8 +172,8 @@ mod tests {
             "backend": "Cloudformation",
             "data": [
                 {
-                    "remote_value": "MyTestStack",
-                    "secret_field_name": "value1"
+                    "value": "MyTestStack",
+                    "key": "value1"
                 }
             ]
         }"#;

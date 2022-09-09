@@ -29,7 +29,7 @@ impl RemoteValue for Vault {
         let mut secrets = BTreeMap::new();
 
         for secret_data in self.data.iter() {
-            let vault_data = get_vault_value(secret_data.remote_value.clone()).await;
+            let vault_data = get_vault_value(secret_data.value.clone()).await;
             match vault_data {
                 Ok(vault_data) => {
                     let data = get_secret_data(secret_data, &vault_data);

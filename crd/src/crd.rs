@@ -51,27 +51,26 @@ pub struct Backend {
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
 pub struct SecretData {
-    /// for ssm / paramstore this is the name of the key
-    /// for cloudformation and pulumi this is the stack name
-    /// for plaintext this is the value of the secret
-    /// for appconfig this is the application id
-    pub remote_value: String,
+    /// remote value of the backend
+    /// for ssm / parameter store / vault: name of the key
+    /// for cloudformation and pulumi: stack name
+    /// for plaintext: value of the secret
+    /// for appconfig: application id
+    /// for pulumi: full stack path eg pulumiOriginId/projectName/stackName
+    pub value: String,
 
     /// whether the remote data is jsonstrinified string or not
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_json_string: Option<bool>,
 
-    /// nested path for the remote data, if remote value is a json
+    /// path for the remote data, if remote value is a json
+    /// for cloudformation and pulumi should be the outputs path
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub remote_nest_path: Option<String>,
+    pub remote_path: Option<String>,
 
     /// secret field name
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub secret_field_name: Option<String>,
-
-    /// output key for cloudformation or pulumi
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub output_key: Option<String>,
+    pub key: Option<String>,
 
     /// configuration profile id for appconfig
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -194,14 +194,14 @@ pub fn rsecret_data_to_secret_data(
     value_string: &str,
 ) -> BTreeMap<String, ByteString> {
     let mut secrets = BTreeMap::new();
-    if rsecret_data.secret_field_name.is_some() {
-        let key = rsecret_data.secret_field_name.clone().unwrap();
+    if rsecret_data.key.is_some() {
+        let key = rsecret_data.key.clone().unwrap();
 
         if rsecret_data.is_json_string.unwrap_or_default() == true {
-            if rsecret_data.remote_nest_path.is_some() {
+            if rsecret_data.remote_path.is_some() {
                 let value = get_json_string_nested_value(
                     value_string,
-                    &rsecret_data.remote_nest_path.clone().unwrap(),
+                    &rsecret_data.remote_path.clone().unwrap(),
                 );
 
                 match value {
