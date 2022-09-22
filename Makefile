@@ -17,7 +17,7 @@ IMAGE_TAG_BASE ?= jerry153fish.com/aws-secrets
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= controller:local
 
 
 # Setting SHELL to bash allows bash commands to be executed by recipes.
@@ -94,7 +94,7 @@ docker-build: ## Build docker image with the manager.
 
 ##@ Deployment
 
-install-crd: crdgen ## install the CRDs
+install-crd: ## install the CRDs
 	kubectl apply -f config/crd.yaml
 
 kind-image-load: ## load the kind image

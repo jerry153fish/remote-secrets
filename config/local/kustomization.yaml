@@ -4,7 +4,10 @@ bases:
 resources:
   - dockerhost.yaml
 
+patchesStrategicMerge:
+  - lifecycle_patch.yaml
+
 images:
   - name: jerry153fish/remote-secrets
     newName: controller
-    newTag: latest
+    newTag: local
