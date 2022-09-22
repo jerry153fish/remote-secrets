@@ -65,7 +65,7 @@ jobs:
         run: |
           make test
 
-  docker-check:
+  sanity-check:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -91,7 +91,7 @@ jobs:
         with:
           install: true
 
-      - name: Cache Docker layers
+      - name: ⚡ Cache Docker layers
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
@@ -116,19 +116,23 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-      - name: load image into kind
+      - name: Setup remote secrets in kind
         run: |
-          docker images
           make kind-image-load
           make install-local
           kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=30s
+
+      - name: Sanity check remote secrets
+        run: |
+          kubectl apply -f config/simples/plaintext.yaml
+          e2e/retry.sh kubectl get secret test-plaintext -o jsonpath='{.data.test-rsecret-plaintext}' | grep 'dGVzdC1yc2VjcmV0LXBsYWludGV4dC12YWx1ZQ=='
 
   docker-push:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: ${{ github.event_name != 'pull_request' }}
     environment: main
-    needs: [test, docker-check]
+    needs: [test, sanity-check]
 
     steps:
       - name: Check out repository code
