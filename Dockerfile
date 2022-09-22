@@ -1,4 +1,4 @@
-FROM ekidd/rust-musl-builder:stable as build
+FROM rust:buster as build
 
 WORKDIR /app
 
@@ -12,14 +12,11 @@ COPY Cargo.toml .
 
 RUN cargo build --release 
 
-FROM alpine:latest as certs
-RUN apk --update add ca-certificates
-
-FROM scratch
+FROM debian:buster-slim
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY --from=build /app/target/x86_64-unknown-linux-musl/release/controller /app
-COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=build /app/target/release/controller /app
 
 CMD ["./controller"]
