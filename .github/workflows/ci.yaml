@@ -75,12 +75,14 @@ jobs:
 
       - name: Create k8s Kind Cluster
         uses: jerry153fish/kind-action@main
+        with:
+          cluster_name: local
 
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: jerry153fish/remote-secrets
+          images: controller
 
       # setup Docker buld action
       - name: Set up Docker Buildx
@@ -102,18 +104,24 @@ jobs:
         id: build
         with:
           context: .
-          tags: |
-            ${{ github.ref != 'refs/heads/main' && steps.meta.outputs.tags || '' }}
-            ${{ github.ref == 'refs/heads/main' && 'jerry153fish/remote-secrets:latest' || '' }}
+          tags: controller:local
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
           push: false
+          load: true
 
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: load image into kind
+        run: |
+          docker images
+          make kind-image-load
+          make install-local
+          kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=30s
 
   docker-push:
     runs-on: ubuntu-latest

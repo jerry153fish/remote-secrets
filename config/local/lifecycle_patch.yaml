@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: remote-secrets
+  name: remote-secrets
+  namespace: remote-secrets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: remote-secrets
+  template:
+    metadata:
+      labels:
+        control-plane: remote-secrets
+    spec:
+      serviceAccountName: remote-secrets
+      containers:
+        - name: remote-secrets-operator
+          imagePullPolicy: Never
