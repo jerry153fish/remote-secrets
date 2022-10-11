@@ -1,18 +1,21 @@
 [package]
-edition = "2021"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
 name = "utils"
-version = "0.1.0"
+repository.workspace = true
+version.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0"
+anyhow.workspace = true
 crd = {path = "../crd"}
-json_dotpath = "1.1.0"
-k8s-openapi = {version = "0.14.0", features = ["v1_22"], default-features = false}
-lazy_static = "1.4.0"
-log = "0.4.6"
-log4rs = "1.1.1"
-prometheus = "0.13.0"
-serde = {version = "1.0.136", features = ["derive"]}
-serde_json = "1.0.79"
+json_dotpath.workspace = true
+k8s-openapi.workspace = true
+lazy_static.workspace = true
+log.workspace = true
+log4rs.workspace = true
+prometheus.workspace = true
+serde.workspace = true
+serde_json.workspace = true

@@ -1,7 +1,10 @@
 [package]
-edition = "2021"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
 name = "remote-secrets"
-version = "0.1.0"
+repository.workspace = true
+version.workspace = true
 
 [[bin]]
 doc = false
@@ -14,12 +17,9 @@ path = "src/lib.rs"
 
 [dependencies]
 actix-web = "4.0.1"
-anyhow = "1.0"
+anyhow.workspace = true
 aws-config = "0.10.1"
 aws-sdk-appconfig = "0.10.1"
-aws-sdk-cloudformation = "0.10.1"
-aws-sdk-secretsmanager = "0.10.1"
-aws-sdk-ssm = "0.10.1"
 aws-smithy-http = "0.40.2"
 aws-types = "0.10.1"
 cached = "0.34.0"
@@ -27,18 +27,17 @@ chrono = {version = "0.4.19", features = ["serde"]}
 crd = {path = "../crd"}
 futures = "0.3"
 http = "0.2"
-json_dotpath = "1.1.0"
+json_dotpath.workspace = true
 k8s = {path = "../k8s"}
-k8s-openapi = {version = "0.14.0", features = ["v1_22"], default-features = false}
-log = "0.4.6"
-log4rs = "1.1.1"
+k8s-openapi.workspace = true
+log.workspace = true
+log4rs.workspace = true
 plugins = {path = "../plugins"}
-prometheus = "0.13.0"
+prometheus.workspace = true
 reqwest = {version = "0.11", features = ["json"]}
 schemars = {version = "0.8.8", features = ["chrono"]}
-serde = {version = "1.0.136", features = ["derive"]}
-serde_json = "1.0.79"
-serde_yaml = "0.8.23"
+serde.workspace = true
+serde_json.workspace = true
 tokio = {version = "1.16.1", features = ["macros", "rt-multi-thread"]}
 utils = {path = "../utils"}
 

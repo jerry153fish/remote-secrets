@@ -7,3 +7,24 @@ members = [
   "plugins",
   "k8s",
 ]
+
+[workspace.package]
+authors = ["Jerry Chen <jerry153fish@gmail.com>"]
+description = "Remote Secret K8s Operator"
+edition = "2021"
+license = "MIT"
+readme = "./README.md"
+repository = "https://github.com/jerry153fish/remote-secrets"
+version = "0.1.0"
+
+[workspace.dependencies]
+anyhow = "1.0"
+async-trait = "0.1.57"
+json_dotpath = "1.1.0"
+k8s-openapi = {version = "0.14.0", features = ["v1_22"], default-features = false}
+lazy_static = "1.4.0"
+log = "0.4.6"
+log4rs = "1.1.1"
+prometheus = "0.13.0"
+serde = {version = "1.0.136", features = ["derive"]}
+serde_json = "1.0.79"
