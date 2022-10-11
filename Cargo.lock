@@ -2595,9 +2595,6 @@ dependencies = [
  "anyhow",
  "aws-config",
  "aws-sdk-appconfig",
- "aws-sdk-cloudformation",
- "aws-sdk-secretsmanager",
- "aws-sdk-ssm",
  "aws-smithy-http",
  "aws-types",
  "cached",
@@ -2619,7 +2616,6 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "serde_yaml",
  "tokio",
  "utils",
 ]
