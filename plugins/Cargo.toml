@@ -11,13 +11,13 @@ version.workspace = true
 [dependencies]
 anyhow.workspace = true
 async-trait = "0.1.57"
-aws-config = "0.10.1"
-aws-sdk-appconfig = "0.10.1"
-aws-sdk-cloudformation = "0.10.1"
-aws-sdk-secretsmanager = "0.10.1"
-aws-sdk-ssm = "0.10.1"
-aws-smithy-http = "0.40.2"
-aws-types = "0.10.1"
+aws-config = "0.49.0"
+aws-sdk-appconfig = "0.19.0"
+aws-sdk-cloudformation = "0.19.0"
+aws-sdk-secretsmanager = "0.19.0"
+aws-sdk-ssm = "0.19.0"
+aws-smithy-http = "0.49.0"
+aws-types = "0.49.0"
 cached = "0.34.0"
 crd = {path = "../crd"}
 futures = "0.3"
