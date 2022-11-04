@@ -19,7 +19,7 @@ log.workspace = true
 schemars = {version = "0.8.8", features = ["chrono"]}
 serde.workspace = true
 serde_json.workspace = true
-serde_yaml = "0.8.23"
+serde_yaml = "0.9.14"
 
 [dependencies.kube]
 features = ["runtime", "client", "derive"]
