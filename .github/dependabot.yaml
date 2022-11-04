@@ -2,7 +2,6 @@ version: 2
 updates:
   - package-ecosystem: "cargo"
     directory: "/"
-    vendor: true
     schedule:
       interval: "weekly"
     labels: ["dependencies"]
