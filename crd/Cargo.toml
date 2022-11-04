@@ -16,7 +16,7 @@ futures = "0.3"
 http = "0.2"
 k8s-openapi.workspace = true
 log.workspace = true
-schemars = {version = "0.8.8", features = ["chrono"]}
+schemars = {version = "0.8.11", features = ["chrono"]}
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml = "0.9.14"
