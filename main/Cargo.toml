@@ -43,4 +43,4 @@ k9 = "0.11.6"
 
 [dependencies.kube]
 features = ["runtime", "client", "derive"]
-version = "0.71.0"
+version = "0.76.0"
