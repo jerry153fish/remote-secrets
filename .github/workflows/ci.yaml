@@ -49,7 +49,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - id: install-aws-cli
-        uses: unfor19/install-aws-cli-action@v1
+        uses: unfor19/install-aws-cli-action@master
 
       - name: Wait for localstack
         run: |
