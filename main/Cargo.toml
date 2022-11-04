@@ -19,7 +19,7 @@ path = "src/lib.rs"
 actix-web = "4.2.1"
 anyhow.workspace = true
 cached = "0.40.0"
-chrono = {version = "0.4.19", features = ["serde"]}
+chrono = {version = "0.4.22", features = ["serde"]}
 crd = {path = "../crd"}
 futures = "0.3"
 http = "0.2"

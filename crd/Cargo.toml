@@ -11,7 +11,7 @@ version.workspace = true
 [dependencies]
 anyhow.workspace = true
 async-trait.workspace = true
-chrono = {version = "0.4.19", features = ["serde"]}
+chrono = {version = "0.4.22", features = ["serde"]}
 futures = "0.3"
 http = "0.2"
 k8s-openapi.workspace = true
