@@ -5,18 +5,14 @@ updates:
     schedule:
       interval: "weekly"
     labels: ["dependencies"]
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "cargo"
     directory: "/main"
     schedule:
       interval: "weekly"
     labels: ["dependencies"]
-
-  - package-ecosystem: "cargo"
-    directory: "/plugins"
-    schedule:
-      interval: "weekly"
-    labels: ["dependencies"]
+    open-pull-requests-limit: 20
 
   - package-ecosystem: "docker"
     directory: "/"
