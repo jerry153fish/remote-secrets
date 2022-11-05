@@ -18,11 +18,10 @@ path = "src/lib.rs"
 [dependencies]
 actix-web = "4.2.1"
 anyhow.workspace = true
-cached = "0.40.0"
+cached.workspace = true
 chrono = {version = "0.4.22", features = ["serde"]}
 crd = {path = "../crd"}
 futures = "0.3"
-http = "0.2"
 json_dotpath.workspace = true
 k8s = {path = "../k8s"}
 k8s-openapi.workspace = true
@@ -30,16 +29,10 @@ log.workspace = true
 log4rs.workspace = true
 plugins = {path = "../plugins"}
 prometheus.workspace = true
-reqwest = {version = "0.11", features = ["json"]}
-schemars = {version = "0.8.11", features = ["chrono"]}
 serde.workspace = true
 serde_json.workspace = true
 tokio = {version = "1.21.2", features = ["macros", "rt-multi-thread"]}
 utils = {path = "../utils"}
-
-[dev-dependencies]
-httpmock = "0.6.5"
-k9 = "0.11.6"
 
 [dependencies.kube]
 features = ["runtime", "client", "derive"]

@@ -177,7 +177,7 @@ make kind-cluster
 3. initialize test data
 
 ```
-make test-init
+make init-test
 ```
 
 4. run test
