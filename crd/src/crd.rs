@@ -6,7 +6,7 @@ use kube::{
     api::{Api, ListParams, Patch, PatchParams, ResourceExt},
     client::Client,
     runtime::{
-        controller::{Action, Context, Controller},
+        controller::{Action, Controller},
         events::{Event, EventType, Recorder, Reporter},
     },
     CustomResource, Resource,

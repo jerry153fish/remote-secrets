@@ -5,7 +5,7 @@ use k8s_openapi::ByteString;
 use kube::{
     api::{Api, ListParams, ResourceExt},
     runtime::{
-        controller::{Action, Context, Controller},
+        controller::{Action, Controller},
         events::Reporter,
     },
     Client, Resource,
@@ -24,16 +24,13 @@ use utils::metrics::RECONCILIATIONS;
 use anyhow::Result;
 use std::collections::BTreeMap;
 
-async fn reconcile(
-    rsecret: Arc<RSecret>,
-    ctx: Context<ContextData>,
-) -> Result<Action, kube::Error> {
+async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Action, kube::Error> {
     // let start = Instant::now();
     RECONCILIATIONS.inc();
 
-    let client = ctx.get_ref().client.clone();
-    ctx.get_ref().state.write().await.last_event = Utc::now();
-    let name = ResourceExt::name(rsecret.as_ref());
+    let client = ctx.client.clone();
+    ctx.state.write().await.last_event = Utc::now();
+    let name = ResourceExt::name_any(rsecret.as_ref());
     let ns = ResourceExt::namespace(rsecret.as_ref()).expect("rsecret is namespaced");
 
     let rs = rsecret.as_ref().clone();
@@ -52,7 +49,7 @@ async fn reconcile(
         RSecretAction::Delete => {
             secret::delete_k8s_secret(client.clone(), &name, &ns).await?;
 
-            secret::delete(client.clone(), &rsecret.name(), &ns).await?;
+            secret::delete(client.clone(), &rsecret.name_any(), &ns).await?;
             Ok(Action::await_change())
         }
 
@@ -114,7 +111,7 @@ fn determine_action(rsecret: &RSecret) -> RSecretAction {
     };
 }
 
-fn error_policy(error: &kube::Error, _ctx: Context<ContextData>) -> Action {
+fn error_policy(_r: Arc<RSecret>, error: &kube::Error, _ctx: Arc<ContextData>) -> Action {
     warn!("reconcile failed: {:?}", error);
     FAILURES.inc();
     Action::requeue(Duration::from_secs(5 * 60))
@@ -164,7 +161,7 @@ impl Manager {
             .expect("Expected a valid KUBECONFIG environment variable.");
 
         let state = Arc::new(RwLock::new(State::new()));
-        let context = Context::new(ContextData {
+        let context = Arc::new(ContextData {
             client: client.clone(),
             state: state.clone(),
         });
