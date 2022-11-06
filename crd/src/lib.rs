@@ -1,6 +1,6 @@
 #![warn(rust_2018_idioms)]
 #![allow(unused_imports)]
-#![allow(clippy::blacklisted_name)]
+#![allow(clippy::disallowed_names)]
 /// crd
 /// Generated type, for crdgen
 pub mod crd;

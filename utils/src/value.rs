@@ -39,7 +39,7 @@ pub fn get_secret_data(
     if rsecret_data.key.is_some() {
         let key = rsecret_data.key.clone().unwrap();
 
-        if rsecret_data.is_json_string.unwrap_or_default() == true {
+        if rsecret_data.is_json_string.unwrap_or_default() {
             if rsecret_data.remote_path.is_some() {
                 let value = get_json_string_nested_value(
                     value_string,
@@ -69,10 +69,7 @@ pub fn merge_secret_data(
     to_merge: BTreeMap<String, ByteString>,
     merged: BTreeMap<String, ByteString>,
 ) -> BTreeMap<String, ByteString> {
-    to_merge
-        .into_iter()
-        .chain(merged.clone().into_iter())
-        .collect()
+    to_merge.into_iter().chain(merged.into_iter()).collect()
 }
 
 #[cfg(test)]

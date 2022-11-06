@@ -65,7 +65,7 @@ pub async fn get_ssm_parameter(name: String) -> Result<String> {
     let parmeter = client.get_parameter().name(name).send().await?;
     let result = parmeter
         .parameter()
-        .ok_or(anyhow!("no parameter found"))?
+        .ok_or_else(|| anyhow!("no parameter found"))?
         .value()
         .unwrap_or_default();
     Ok(result.to_string())

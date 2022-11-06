@@ -96,15 +96,15 @@ pub async fn get_pulumi_outputs(
 }
 
 pub fn get_pulumi_endpoint() -> Result<String> {
-    Ok(std::env::var("PULUMI_ENDPOINT").unwrap_or("https://api.pulumi.com/api/stacks".to_string()))
+    let pulumi_endpoint = "https://api.pulumi.com/api/stacks".to_string();
+    Ok(std::env::var("PULUMI_ENDPOINT").unwrap_or(pulumi_endpoint))
 }
 
 pub fn get_pulumi_token(pulumi_token: Option<String>) -> Result<String> {
-    let token;
-    match pulumi_token {
-        None => token = std::env::var("PULUMI_ACCESS_TOKEN")?,
-        Some(t) => token = t,
-    }
+    let token = match pulumi_token {
+        None => std::env::var("PULUMI_ACCESS_TOKEN")?,
+        Some(t) => t,
+    };
     Ok(token)
 }
 

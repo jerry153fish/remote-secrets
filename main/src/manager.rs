@@ -38,7 +38,7 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
     // let duration = start.elapsed().as_millis() as f64 / 1000.0;
 
     // Performs action as decided by the `determine_action` function.
-    return match determine_action(&rsecret) {
+    match determine_action(&rsecret) {
         RSecretAction::Create => {
             secret::add(client.clone(), &name, &ns).await?;
 
@@ -87,7 +87,7 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
 
             Ok(Action::requeue(Duration::from_secs(20)))
         }
-    };
+    }
 }
 
 enum RSecretAction {
@@ -97,7 +97,7 @@ enum RSecretAction {
 }
 
 fn determine_action(rsecret: &RSecret) -> RSecretAction {
-    return if rsecret.meta().deletion_timestamp.is_some() {
+    if rsecret.meta().deletion_timestamp.is_some() {
         RSecretAction::Delete
     } else if rsecret
         .meta()
@@ -108,7 +108,7 @@ fn determine_action(rsecret: &RSecret) -> RSecretAction {
         RSecretAction::Create
     } else {
         RSecretAction::Update
-    };
+    }
 }
 
 fn error_policy(_r: Arc<RSecret>, error: &kube::Error, _ctx: Arc<ContextData>) -> Action {
