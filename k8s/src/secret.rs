@@ -133,7 +133,7 @@ pub async fn update_k8s_secret(
         .metadata
         .namespace
         .clone()
-        .unwrap_or("default".to_owned());
+        .unwrap_or_else(|| "default".to_owned());
 
     let k8s_secret_api: Api<Secret> = Api::namespaced(client.clone(), &ns);
 
