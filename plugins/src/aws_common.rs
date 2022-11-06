@@ -10,7 +10,8 @@ pub fn is_test_env() -> bool {
 
 /// get the localstack endpoint
 pub fn localstack_endpoint() -> Endpoint {
-    let url = std::env::var("LOCALSTACK_URL").unwrap_or("http://localhost:4566/".to_string());
+    let local_endpoint = "http://localhost:4566/".to_string();
+    let url = std::env::var("LOCALSTACK_URL").unwrap_or(local_endpoint);
     Endpoint::immutable(Uri::from_str(&url).unwrap())
 }
 

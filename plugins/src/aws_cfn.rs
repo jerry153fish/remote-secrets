@@ -97,9 +97,9 @@ pub async fn get_cloudformation_outputs(
 
     let result = resp
         .stacks()
-        .ok_or(anyhow!("no stacks found"))?
+        .ok_or_else(|| anyhow!("no stacks found"))?
         .first()
-        .ok_or(anyhow!("no first stack found"))?
+        .ok_or_else(|| anyhow!("no first stack found"))?
         .outputs()
         .unwrap_or_default();
 
@@ -112,7 +112,7 @@ pub async fn get_cloudformation_output(stack_name: String, remote_path: String) 
     let result = outputs
         .iter()
         .find(|output| output.output_key().unwrap_or_default() == remote_path)
-        .ok_or(anyhow!("no output found"))?
+        .ok_or_else(|| anyhow!("no output found"))?
         .output_value()
         .unwrap_or_default();
 

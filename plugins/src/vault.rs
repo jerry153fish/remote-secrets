@@ -64,13 +64,14 @@ pub async fn get_vault_value(path: String) -> Result<String> {
 }
 
 pub fn get_vault_secret_endpoint() -> Result<String> {
-    let url;
-    if is_test_env() {
-        url = std::env::var("VAULT_ADDR").unwrap_or("http://localhost:8200".to_string());
+    let local_vault_endpoint = "http://localhost:8200".to_string();
+    let url = if is_test_env() {
+        std::env::var("VAULT_ADDR").unwrap_or(local_vault_endpoint)
     } else {
-        url = std::env::var("VAULT_ADDR")?;
-    }
-    if url.ends_with("/") {
+        std::env::var("VAULT_ADDR")?
+    };
+
+    if url.ends_with('/') {
         Ok(format!("{}v1/secret/data/", url))
     } else {
         Ok(format!("{}/v1/secret/data/", url))
@@ -78,12 +79,12 @@ pub fn get_vault_secret_endpoint() -> Result<String> {
 }
 
 pub fn get_vault_token() -> Result<String> {
-    let token;
-    if is_test_env() {
-        token = std::env::var("VAULT_TOKEN").unwrap_or("vault-plaintext-root-token".to_string());
+    let default_vault_root_token = "vault-plaintext-root-token".to_string();
+    let token = if is_test_env() {
+        std::env::var("VAULT_TOKEN").unwrap_or(default_vault_root_token)
     } else {
-        token = std::env::var("VAULT_TOKEN")?;
-    }
+        std::env::var("VAULT_TOKEN")?
+    };
     Ok(token)
 }
 
@@ -91,7 +92,7 @@ pub fn get_vault_client(key: String) -> Result<reqwest::RequestBuilder> {
     let endpoint = get_vault_secret_endpoint()?;
     let token = get_vault_token()?;
 
-    let url = format!("{}{}", endpoint, key.clone());
+    let url = format!("{}{}", endpoint, key);
 
     let client = reqwest::Client::new()
         .get(url)

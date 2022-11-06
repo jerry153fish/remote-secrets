@@ -50,7 +50,7 @@ pub async fn get_secret_data(
         };
     }
 
-    return merge_secret_data(secrets, data);
+    merge_secret_data(secrets, data)
 }
 
 /// Adds a finalizer record into an `RSecret` kind of resource. If the finalizer already exists,
@@ -64,7 +64,7 @@ pub async fn add(client: Client, name: &str, namespace: &str) -> Result<RSecret,
     });
 
     let patch: Patch<&Value> = Patch::Merge(&finalizer);
-    Ok(api.patch(name, &PatchParams::default(), &patch).await?)
+    api.patch(name, &PatchParams::default(), &patch).await
 }
 
 /// Removes all finalizers from an `RSecret` resource. If there are no finalizers already, this
@@ -78,7 +78,7 @@ pub async fn delete(client: Client, name: &str, namespace: &str) -> Result<RSecr
     });
 
     let patch: Patch<&Value> = Patch::Merge(&finalizer);
-    Ok(api.patch(name, &PatchParams::default(), &patch).await?)
+    api.patch(name, &PatchParams::default(), &patch).await
 }
 
 /// create a new secret from rsecret
@@ -88,13 +88,13 @@ pub async fn create_k8s_secret(client: Client, rsecret: &RSecret) -> Result<Secr
         .metadata
         .namespace
         .clone()
-        .unwrap_or("default".to_owned());
+        .unwrap_or_else(|| "default".to_owned());
 
     let mut labels: BTreeMap<String, String> = BTreeMap::new();
 
     let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
 
-    data = get_secret_data(&rsecret, data).await;
+    data = get_secret_data(rsecret, data).await;
 
     let data_string = serde_json::to_string(&data).unwrap();
 
@@ -137,7 +137,7 @@ pub async fn update_k8s_secret(
 
     let k8s_secret_api: Api<Secret> = Api::namespaced(client.clone(), &ns);
 
-    if let Ok(_) = k8s_secret_api.get(&name).await {
+    if k8s_secret_api.get(&name).await.is_ok() {
         let hash_id = calculate_hash(&data_string.to_string());
 
         let data_value = serde_json::from_str::<Value>(data_string).unwrap();
@@ -167,7 +167,7 @@ pub async fn delete_k8s_secret(
     namespace: &str,
 ) -> Result<(), kube::Error> {
     let api: Api<Secret> = Api::namespaced(client, namespace);
-    if let Ok(_) = api.get(&name).await {
+    if api.get(name).await.is_ok() {
         api.delete(name, &DeleteParams::default()).await?;
     }
 
@@ -197,7 +197,7 @@ pub fn rsecret_data_to_secret_data(
     if rsecret_data.key.is_some() {
         let key = rsecret_data.key.clone().unwrap();
 
-        if rsecret_data.is_json_string.unwrap_or_default() == true {
+        if rsecret_data.is_json_string.unwrap_or_default() {
             if rsecret_data.remote_path.is_some() {
                 let value = get_json_string_nested_value(
                     value_string,
