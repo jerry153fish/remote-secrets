@@ -10,8 +10,6 @@ spec:
       data:
         - value: MyStringParameter
           key: test-rsecret-ssm-param
-        - value: MyStringParameter
-          key: test-rsecret-ssm-param1
     - backend: Plaintext
       data:
         - value: test-rsecret-plaintext-value
@@ -20,15 +18,5 @@ spec:
           key: test-rsecret-plaintext-1
     - backend: SecretManager
       data:
-        - value: MyTestSecret
+        - value: TestAwsSecretManager
           key: test-rsecret-secretmanager
-        - value: MyTestSecret
-          key: test-rsecret-secretmanager1
-        - value: NotExisting
-          key: test-rsecret-secretmanager-not-existing
-    - backend: Cloudformation
-      data:
-        - value: MyTestStack
-        - value: MyTestStack
-          key: test-cfn-stack
-          remote_path: S3Bucket
