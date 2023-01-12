@@ -1,4 +1,5 @@
 ## remote-secrets
+[![Main CI](https://github.com/jerry153fish/remote-secrets/actions/workflows/ci.yaml/badge.svg)](https://github.com/jerry153fish/remote-secrets/actions/workflows/ci.yaml)
 
 Remote Secrets allows you to use remote secret management systems, SSM parameter store, application configuration, Cloudformation stack outputs, and more to add a single secret in k8s.
 
