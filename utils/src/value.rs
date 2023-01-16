@@ -60,6 +60,16 @@ pub fn get_secret_data(
         } else {
             secrets.insert(key, ByteString(value_string.as_bytes().to_vec()));
         }
+    } else {
+        let data = get_json_string_as_secret_data(value_string);
+        match data {
+            Ok(data) => {
+                secrets = data;
+            }
+            Err(e) => {
+                log::error!("{}", e);
+            }
+        }
     }
 
     secrets
@@ -100,5 +110,24 @@ mod tests {
         assert_eq!(street, "Downing Street 10");
         assert_eq!(phone1, "+44 1234567");
         assert_eq!(not_existed, "");
+    }
+
+    #[test]
+    fn test_get_secret_data() {
+        let r_data_raw = r#"
+        {
+            "value": "test"
+        }"#;
+
+        let value_string = r#"
+        {
+            "key": "test"
+        }"#;
+
+        let r_data: SecretData = serde_json::from_str(r_data_raw).unwrap();
+
+        let result = get_secret_data(&r_data, &value_string);
+
+        println!("{:?}", result);
     }
 }
