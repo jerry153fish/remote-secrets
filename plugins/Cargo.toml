@@ -16,7 +16,7 @@ aws-sdk-appconfig = "0.22.0"
 aws-sdk-cloudformation = "0.22.0"
 aws-sdk-secretsmanager = "0.22.0"
 aws-sdk-ssm = "0.22.0"
-aws-smithy-http = "0.52.0"
+aws-smithy-http = "0.53.1"
 aws-types = "0.52.0"
 cached.workspace = true
 crd = {path = "../crd"}
