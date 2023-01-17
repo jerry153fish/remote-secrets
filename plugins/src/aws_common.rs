@@ -1,5 +1,4 @@
 use anyhow::Result;
-use aws_smithy_http::endpoint::Endpoint;
 
 /// if using localstack as aws backend
 pub fn is_test_env() -> bool {
@@ -7,10 +6,10 @@ pub fn is_test_env() -> bool {
 }
 
 /// get the localstack endpoint
-pub fn localstack_endpoint() -> Endpoint {
+pub fn localstack_endpoint() -> &'static str {
     let local_endpoint = "http://localhost:4566/".to_string();
     let url = std::env::var("LOCALSTACK_URL").unwrap_or(local_endpoint);
-    Endpoint::immutable(url).unwrap()
+    Box::leak(url.into_boxed_str())
 }
 
 pub async fn get_aws_sdk_config() -> Result<aws_types::SdkConfig> {
