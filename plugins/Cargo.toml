@@ -11,7 +11,7 @@ version.workspace = true
 [dependencies]
 anyhow.workspace = true
 async-trait.workspace = true
-aws-config = "0.53.0"
+aws-config = "0.54.1"
 aws-sdk-appconfig = "0.23.0"
 aws-sdk-cloudformation = "0.23.0"
 aws-sdk-secretsmanager = "0.23.0"
