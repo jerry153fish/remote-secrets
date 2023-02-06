@@ -30,5 +30,5 @@ log = "0.4.6"
 log4rs = "1.2.0"
 prometheus = "0.13.3"
 serde = {version = "1.0.152", features = ["derive"]}
-serde_json = "1.0.91"
+serde_json = "1.0.92"
 tokio = {version = "1.25.0", features = ["macros", "rt-multi-thread"]}
