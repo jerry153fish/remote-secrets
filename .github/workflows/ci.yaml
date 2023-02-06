@@ -101,7 +101,7 @@ jobs:
             ${{ runner.os }}-
 
       - name: Build image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         id: build
         with:
           context: .
@@ -187,7 +187,7 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           tags: |
