@@ -67,7 +67,9 @@ test: ## run the tests
 init-test: ## init the test environment
 	mkdir debug || true
 	aws ssm put-parameter --endpoint-url http://localhost:4566 --name MyStringParameter --type "String" --value "Vici" --overwrite > /dev/null || true
+	aws ssm put-parameter --endpoint-url http://localhost:4566 --name MyJsonParameter --type "String" --value '{ "ssmName": "test", "objectName": "objectName"}' --overwrite > /dev/null || true
 	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyTestSecret --secret-string "Vicd" > /dev/null || true
+	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyJsonSecret --secret-string '{ "srmName": "test", "objectName": "objectName"}' > /dev/null || true
 	aws cloudformation create-stack --endpoint-url http://localhost:4566 --stack-name MyTestStack --template-body file://e2e/mock-cfn.yaml > debug/create-stack-result.json || true
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"bar"}}' http://127.0.0.1:8200/v1/secret/data/baz || true
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"test": "aaa"}}}' http://127.0.0.1:8200/v1/secret/data/foo || true
