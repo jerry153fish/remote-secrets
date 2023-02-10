@@ -10,6 +10,9 @@ spec:
       data:
         - value: MyStringParameter
           key: test-rsecret-ssm-param
+    - backend: SSM
+      data:
+        - value: MyJsonParameter
     - backend: Plaintext
       data:
         - value: test-rsecret-plaintext-value
