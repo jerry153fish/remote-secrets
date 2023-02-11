@@ -1,11 +1,9 @@
 bases:
   - ../default
 
-resources:
-  - dockerhost.yaml
-
 patchesStrategicMerge:
   - lifecycle_patch.yaml
+  - secret_patch.yaml
 
 images:
   - name: jerry153fish/remote-secrets

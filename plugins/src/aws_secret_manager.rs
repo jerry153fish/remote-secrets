@@ -50,7 +50,10 @@ impl RemoteValue for SecretManager {
 pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmanager::Client {
     let mut secretsmanager_config_builder = aws_sdk_secretsmanager::config::Builder::from(conf);
     if is_test_env() {
-        log::info!("Using localstack for SecretsManager");
+        log::info!(
+            "Using localstack for SecretsManager {}",
+            localstack_endpoint()
+        );
         secretsmanager_config_builder =
             secretsmanager_config_builder.endpoint_resolver(localstack_endpoint())
     }

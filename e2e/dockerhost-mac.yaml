@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dockerhost
+  name: dockerhost
+  namespace: remote-secrets
+spec:
+  externalName: host.docker.internal
+  selector:
+    app: dockerhost
+  type: ExternalName
+status:
+  loadBalancer: {}

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dockerhost
+  name: dockerhost
+  namespace: remote-secrets
+spec:
+  clusterIP: None
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: dockerhost
+  namespace: remote-secrets
+subsets:
+  - addresses:
+      - ip: 172.17.0.1

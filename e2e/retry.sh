@@ -8,7 +8,7 @@ function fail {
 command="kubectl get secret test-rsecret -o jsonpath={.data.$1}"
 
 n=1
-max=5
+max=10
 while true; do
   $command | grep $2 && break || {
       if [[ $n -lt $max ]]; then

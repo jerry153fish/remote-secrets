@@ -133,6 +133,7 @@ jobs:
             AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
             AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
             AWS_REGION: "${{ secrets.AWS_REGION }}"
+            TEST_ENV: "false"
           EOF
 
           kubectl rollout restart deploy/remote-secrets -n remote-secrets
@@ -143,6 +144,13 @@ jobs:
         run: |
           kubectl apply -f config/simples/example.yaml
           e2e/integration-test.sh
+
+      - name: Show logs
+        if: failure()
+        run: |
+          kubectl get secret test-rsecret -o yaml
+          kubectl -n remote-secrets get deploy remote-secrets -o yaml
+          kubectl -n remote-secrets logs deploy/remote-secrets
 
   docker-push:
     runs-on: ubuntu-latest
