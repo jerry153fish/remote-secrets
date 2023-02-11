@@ -216,5 +216,5 @@ stringData:
 #  AWS_ACCESS_KEY_ID: "aaa"
 #  AWS_SECRET_ACCESS_KEY: "secret"
 #  AWS_REGION: "ap-southeast-2"
-#  LOCALSTACK_URL: "http://dockerhost:4572"
+#  LOCALSTACK_URL: "http://dockerhost:4566"
 #  TEST_ENV: "true"

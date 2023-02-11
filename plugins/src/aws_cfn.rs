@@ -74,7 +74,10 @@ impl RemoteValue for Cloudformation {
 pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformation::Client {
     let mut cloudformation_config_builder = aws_sdk_cloudformation::config::Builder::from(conf);
     if is_test_env() {
-        log::info!("Using localstack for CloudFormation");
+        log::info!(
+            "Using localstack for CloudFormation: {}",
+            localstack_endpoint()
+        );
         cloudformation_config_builder =
             cloudformation_config_builder.endpoint_resolver(localstack_endpoint())
     }
