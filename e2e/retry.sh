@@ -5,10 +5,12 @@ function fail {
   exit 1
 }
 
+command="kubectl get secret test-rsecret -o jsonpath={.data.$1}"
+
 n=1
 max=5
 while true; do
-  "$@" && break || {
+  $command | grep $2 && break || {
       if [[ $n -lt $max ]]; then
         ((n++))
         echo "Command failed. Attempt $n/$max:"

@@ -142,12 +142,7 @@ jobs:
       - name: Sanity check remote secrets
         run: |
           kubectl apply -f config/simples/example.yaml
-          e2e/retry.sh kubectl get secret test-rsecret -o jsonpath='{.data.test-rsecret-plaintext}' | grep 'dGVzdC1yc2VjcmV0LXBsYWludGV4dC12YWx1ZQ=='
-          e2e/retry.sh kubectl get secret test-rsecret -o jsonpath='{.data.test-rsecret-ssm-param}' | grep 'VGVzdDE='
-          e2e/retry.sh kubectl get secret test-rsecret -o jsonpath='{.data.test-rsecret-secretmanager}' | grep 'dGVzdEF3c1NlY3JldE1hbmFnZXI='
-          # nested json string 
-          e2e/retry.sh kubectl get secret test-rsecret -o jsonpath='{.data.ssmName}' | grep 'dGVzdA=='
-          e2e/retry.sh kubectl get secret test-rsecret -o jsonpath='{.data.objectName}' | grep 'b2JqZWN0TmFtZQ=='
+          e2e/integration-test.sh
 
   docker-push:
     runs-on: ubuntu-latest
