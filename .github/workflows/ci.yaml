@@ -94,9 +94,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ github.sha }}
+            ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-buildx-
             ${{ runner.os }}-
 
@@ -180,9 +180,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ github.sha }}
+            ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-buildx-
             ${{ runner.os }}-
 
