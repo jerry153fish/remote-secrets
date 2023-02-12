@@ -29,7 +29,7 @@ jobs:
           VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
 
     env:
-      AWS_REGION: us-east-1
+      AWS_REGION: ap-southeast-2
       AWS_ACCESS_KEY_ID: foobar
       AWS_SECRET_ACCESS_KEY: foobar
       VAULT_ADDR: http://localhost:8200
@@ -67,6 +67,30 @@ jobs:
   sanity-check:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+          - 4571:4571
+        env:
+          DEBUG: 1
+
+      vault-server:
+        image: vault:latest
+        ports:
+          - "8200:8200"
+        env:
+          VAULT_ADDR: "http://0.0.0.0:8200"
+          VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
+
+    env:
+      AWS_REGION: ap-southeast-2
+      AWS_ACCESS_KEY_ID: foobar
+      AWS_SECRET_ACCESS_KEY: foobar
+      VAULT_ADDR: http://localhost:8200
+      VAULT_TOKEN: vault-plaintext-root-token
 
     steps:
       - name: Check out repository code
@@ -117,28 +141,20 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@master
+
       - name: Setup remote secrets in kind
         run: |
+          ./wait-for.sh http://localhost:4566/health -t 300 -- echo 'localstack up'
+          make init-test
           make kind-image-load
           make install-local
-          cat <<EOF | kubectl apply -f -
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: remote-secrets
-            namespace: remote-secrets
-          type: Opaque
-          stringData:
-            APP: "remote-secrets"
-            AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
-            AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-            AWS_REGION: "${{ secrets.AWS_REGION }}"
-            TEST_ENV: "false"
-          EOF
-
-          kubectl rollout restart deploy/remote-secrets -n remote-secrets
+          kubectl apply -f e2e/dockerhost-linux.yaml
 
           kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=30s
+
+          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apt update -y && apt install -y curl && curl http://dockerhost:4566/health'
 
       - name: Sanity check remote secrets
         run: |
@@ -148,9 +164,15 @@ jobs:
       - name: Show logs
         if: failure()
         run: |
-          kubectl get secret test-rsecret -o yaml
-          kubectl -n remote-secrets get deploy remote-secrets -o yaml
-          kubectl -n remote-secrets logs deploy/remote-secrets
+
+          kubectl get secret test-rsecret -o yaml || true
+          kubectl -n remote-secrets get deploy remote-secrets -o yaml || true
+          kubectl -n remote-secrets logs deploy/remote-secrets || true
+          docker logs "${{ job.services.localstack.id }}" || true
+          kubectl get rsecrets.jerry153fish.com test-rsecret -o yaml || true
+          aws ssm get-parameters --endpoint-url http://localhost:4566 --names MyStringParameter MyJsonParameter | cat -
+          aws secretsmanager list-secrets --endpoint-url http://localhost:4566 | cat -
+          aws cloudformation describe-stacks --stack-name MyTestStack --endpoint-url http://localhost:4566 | cat -
 
   docker-push:
     runs-on: ubuntu-latest
