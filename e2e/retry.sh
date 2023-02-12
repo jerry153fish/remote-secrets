@@ -8,12 +8,12 @@ function fail {
 command="kubectl get secret test-rsecret -o jsonpath={.data.$1}"
 
 n=1
-max=10
+max=20
 while true; do
-  $command | grep $2 && break || {
+  kubectl get secret test-rsecret -o jsonpath={.data.$1} | grep $2 && break || {
       if [[ $n -lt $max ]]; then
         ((n++))
-        echo "Command failed. Attempt $n/$max:"
+        echo "retry failed for path: <$1> check for : <$2>. Attempt $n/$max:"
         sleep 2;
       else
         fail "The command has failed after $n attempts."

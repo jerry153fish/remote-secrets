@@ -21,5 +21,14 @@ spec:
           key: test-rsecret-plaintext-1
     - backend: SecretManager
       data:
-        - value: TestAwsSecretManager
+        - value: MyTestSecret
           key: test-rsecret-secretmanager
+    - backend: SecretManager
+      data:
+        - value: MyJsonSecret
+    - backend: Cloudformation
+      data:
+        - value: MyTestStack
+        - value: MyTestStack
+          key: test-cfn-stack
+          remote_path: S3Bucket
