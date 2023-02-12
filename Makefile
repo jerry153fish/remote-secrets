@@ -73,8 +73,8 @@ init-test: ## init the test environment
 	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyJsonSecret --secret-string '{ "srmName": "test", "srmTest": "objectName"}' > /dev/null || true
 	aws secretsmanager list-secrets --endpoint-url http://localhost:4566 > debug/secets-manager-list.json || true
 	aws cloudformation create-stack --endpoint-url http://localhost:4566 --stack-name MyTestStack --template-body file://e2e/mock-cfn.yaml > debug/create-stack-result.json || true
-	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"bar"}}' http://127.0.0.1:8200/v1/secret/data/baz || true
-	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"test": "aaa"}}}' http://127.0.0.1:8200/v1/secret/data/foo || true
+	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"vaultString"}}' http://127.0.0.1:8200/v1/secret/data/vaultString || true
+	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"vaultJson1": "vaultJson1", "vaultJson2": "vaultJson2"}}}' http://127.0.0.1:8200/v1/secret/data/vaultJson || true
 
 mock-env: ## intialize the test environment locally
 	docker compose -f e2e/services.yaml up -d
