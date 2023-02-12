@@ -118,11 +118,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-buildx-
-            ${{ runner.os }}-
 
       - name: Build image
         uses: docker/build-push-action@v4
@@ -202,11 +200,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-buildx-
-            ${{ runner.os }}-
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
