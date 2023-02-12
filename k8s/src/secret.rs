@@ -12,6 +12,7 @@ use plugins::aws_secret_manager::SecretManager;
 use plugins::aws_ssm::SSM;
 use plugins::plaintext::PlainText;
 use plugins::pulumi::Pulumi;
+use plugins::vault::Vault;
 use serde_json::{json, Value};
 use std::collections::{hash_map::DefaultHasher, BTreeMap};
 use std::hash::{Hash, Hasher};
@@ -45,6 +46,10 @@ pub async fn get_secret_data(
             BackendType::Pulumi => {
                 let pulumi_data = Pulumi::from_backend(backend).get_value().await;
                 secrets = merge_secret_data(pulumi_data, secrets);
+            }
+            BackendType::Vault => {
+                let data = Vault::from_backend(backend).get_value().await;
+                secrets = merge_secret_data(data, secrets);
             }
             _ => {}
         };

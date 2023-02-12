@@ -106,9 +106,19 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_get_vault_value() {
-        let result2 = get_vault_value("baz".to_string()).await.unwrap();
+    async fn test_get_vault_string_value() {
+        let rest = get_vault_value("vaultString".to_string()).await.unwrap();
 
-        assert_eq!(result2, "\"bar\"".to_string());
+        assert_eq!(rest, "\"vaultString\"".to_string());
+    }
+
+    #[tokio::test]
+    async fn test_get_vault_json_value() {
+        let rest = get_vault_value("vaultJson".to_string()).await.unwrap();
+
+        assert_eq!(
+            rest,
+            "{\"vaultJson1\":\"vaultJson1\",\"vaultJson2\":\"vaultJson2\"}".to_string()
+        );
     }
 }

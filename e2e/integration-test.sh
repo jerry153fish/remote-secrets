@@ -23,5 +23,12 @@ e2e/retry.sh srmTest b2JqZWN0TmFtZQ==
 e2e/retry.sh S3Bucket UzNCdWNrZXQ=
 e2e/retry.sh S3TestPoint VGVzdFBvaW50
 
-# specific path
+# cloudformation specific path
 e2e/retry.sh test-cfn-stack UzNCdWNrZXQ=
+
+# vault string data
+e2e/retry.sh vault-string InZhdWx0U3RyaW5nIg==
+
+# vault nested json
+e2e/retry.sh vaultJson1 dmF1bHRKc29uMQ==
+e2e/retry.sh vaultJson2 dmF1bHRKc29uMg==

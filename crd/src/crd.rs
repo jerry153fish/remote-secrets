@@ -89,6 +89,7 @@ pub enum BackendType {
     AppConfig,
     Pulumi,
     Plaintext,
+    Vault,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]

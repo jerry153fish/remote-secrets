@@ -32,3 +32,8 @@ spec:
         - value: MyTestStack
           key: test-cfn-stack
           remote_path: S3Bucket
+    - backend: Vault
+      data:
+        - value: vaultString
+          key: vault-string
+        - value: vaultJson

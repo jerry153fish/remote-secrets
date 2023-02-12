@@ -37,6 +37,7 @@ spec:
                       - AppConfig
                       - Pulumi
                       - Plaintext
+                      - Vault
                       type: string
                     data:
                       default: []
