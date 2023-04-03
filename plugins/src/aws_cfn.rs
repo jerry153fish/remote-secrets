@@ -89,7 +89,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
 #[cached(time = 60, result = true)]
 pub async fn get_cloudformation_outputs(
     stack_name: String,
-) -> Result<Vec<aws_sdk_cloudformation::model::Output>> {
+) -> Result<Vec<aws_sdk_cloudformation::types::Output>> {
     let shared_config = aws_config::from_env().load().await;
     let client = cloudformation_client(&shared_config);
     let resp = client
