@@ -39,18 +39,26 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: ⚡ Cache
+      - name: ⚡ Cache Cargo
         uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-cargo-
-            ${{ runner.os }}-
+            ${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cache-
+
+      - name: ⚡ Cache Cargo Target
+        uses: actions/cache@v3
+        with:
+          path: |
+            target
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-target-
 
       - id: install-aws-cli
         uses: unfor19/install-aws-cli-action@master
@@ -63,11 +71,6 @@ jobs:
       - name: Run unit tests
         run: |
           make test
-
-      - name: clean cargo cache
-        run: |
-          cargo install cargo-cache
-          cargo cache --autoclean
 
   sanity-check:
     runs-on: ubuntu-latest
