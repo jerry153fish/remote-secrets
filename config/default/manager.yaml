@@ -23,9 +23,16 @@ spec:
         control-plane: remote-secrets
     spec:
       serviceAccountName: remote-secrets
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: remote-secrets-operator
           image: jerry153fish/remote-secrets:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
           livenessProbe:
             httpGet:
               path: /healthz

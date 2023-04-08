@@ -50,9 +50,13 @@ RUN cargo build --release
 
 FROM debian:buster-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN groupadd --gid 1000 remote \
+    && useradd --uid 1000 --gid remote --shell /bin/bash --create-home remote
 
 WORKDIR /app
 
 COPY --from=build /app/target/release/controller /app
+RUN chown -R remote:remote /app
+USER remote
 
 CMD ["./controller"]
