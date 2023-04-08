@@ -39,18 +39,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: ⚡ Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-cargo-
-            ${{ runner.os }}-
+      - uses: Swatinem/rust-cache@v2
 
       - id: install-aws-cli
         uses: unfor19/install-aws-cli-action@master
@@ -183,6 +172,9 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -221,6 +213,14 @@ jobs:
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: Sign image with a key
+        run: |
+          cosign sign --key env://COSIGN_PRIVATE_KEY ${TAGS} -y
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_PRIVATE_KEY}}
+          COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
 
       - name: Move cache
         run: |
