@@ -218,7 +218,9 @@ jobs:
         run: |
           cosign sign --key env://COSIGN_PRIVATE_KEY ${TAGS} -y
         env:
-          TAGS: ${{ steps.meta.outputs.tags }}
+          TAGS: |
+            ${{ github.ref != 'refs/heads/main' && steps.meta.outputs.tags || '' }}
+            ${{ github.ref == 'refs/heads/main' && 'jerry153fish/remote-secrets:latest' || '' }}
           COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_PRIVATE_KEY}}
           COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
 
