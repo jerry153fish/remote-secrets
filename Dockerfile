@@ -1,5 +1,7 @@
-FROM rust:buster as build
+FROM rust:alpine as build
 
+RUN apk add --no-cache musl-dev openssl-dev pkgconfig perl make
+RUN export OPENSSL_LIB_DIR="/usr/lib/x86_64-linux-gnu"; export OPENSSL_INCLUDE_DIR="/usr/include/openssl"
 WORKDIR /app
 
 COPY Cargo.lock .
@@ -48,8 +50,8 @@ COPY k8s k8s
 RUN touch -a -m ./k8s/src/lib.rs
 RUN cargo build --release 
 
-FROM debian:buster-slim
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM alpine:3.17
+RUN apk --update add ca-certificates
 
 WORKDIR /app
 
