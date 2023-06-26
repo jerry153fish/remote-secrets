@@ -86,7 +86,7 @@ jobs:
           DEBUG: 1
 
       vault-server:
-        image: vault:latest
+        image: vault:1.13.3
         ports:
           - "8200:8200"
         env:
