@@ -19,7 +19,7 @@ path = "src/lib.rs"
 actix-web = "4.4.0"
 anyhow.workspace = true
 cached.workspace = true
-chrono = {version = "0.4.28", features = ["serde"]}
+chrono = {version = "0.4.30", features = ["serde"]}
 crd = {path = "../crd"}
 futures.workspace = true
 json_dotpath.workspace = true
