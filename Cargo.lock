@@ -370,9 +370,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-appconfig"
-version = "0.30.0"
+version = "0.31.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "708dc30ce4b517380a3d4e4e18aa01540177c807921ee5f9c9e9bd976aa8cf96"
+checksum = "1e1e46ad84562d09a01225500a8674e689ce8117aad2d7feacaf03b4d769aed2"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -394,9 +394,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudformation"
-version = "0.30.0"
+version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "292e28d7f45cda21d3b0f35d6f5365e480ca86a55785d2de334a93ece2a1d04f"
+checksum = "5543c3c7e268debb5684285ffea5e73e84dfadc814b5f4cc220ef20661868a2e"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -420,9 +420,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-secretsmanager"
-version = "0.30.0"
+version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03b17dbefaa95312dc4691402cac16099091c08e997cb99cff5be02e51164c48"
+checksum = "6c1ed36f87416492f8a7529f201de656ffda5346cff3cce6cf0c16b63081dd35"
 dependencies = [
  "aws-credential-types",
  "aws-http",
@@ -445,9 +445,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-ssm"
-version = "0.30.0"
+version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40b668aa85c17dede74ae8d2bf627014110bdf2adfbab0c2315e3d5c4e8435d5"
+checksum = "b9bc0b90baaa82399d95f0a3ed2a75cfcc79e2bee1f01a6e8a5663849fed4171"
 dependencies = [
  "aws-credential-types",
  "aws-http",
