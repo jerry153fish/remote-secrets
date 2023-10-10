@@ -8,6 +8,8 @@ members = [
   "k8s",
 ]
 
+resolver = "2"
+
 [workspace.package]
 authors = ["Jerry Chen <jerry153fish@gmail.com>"]
 description = "Remote Secret K8s Operator"
