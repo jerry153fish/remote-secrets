@@ -50,7 +50,7 @@ COPY k8s k8s
 RUN touch -a -m ./k8s/src/lib.rs
 RUN cargo build --release 
 
-FROM alpine:3.18
+FROM alpine:3.19
 RUN apk --update add ca-certificates
 
 WORKDIR /app
