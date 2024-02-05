@@ -18,4 +18,4 @@ log.workspace = true
 schemars = {version = "0.8.16", features = ["chrono"]}
 serde.workspace = true
 serde_json.workspace = true
-serde_yaml = "0.9.30"
+serde_yaml = "0.9.31"
