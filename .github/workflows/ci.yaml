@@ -105,7 +105,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.8.0
+        uses: helm/kind-action@v1.9.0
         with:
           cluster_name: local
           ignore_failed_clean: true
