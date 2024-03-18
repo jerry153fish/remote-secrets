@@ -21,7 +21,7 @@ version = "1.0.6"
 
 [workspace.dependencies]
 anyhow = "1.0"
-async-trait = "0.1.77"
+async-trait = "0.1.78"
 cached = "0.40.0"
 futures = "0.3"
 json_dotpath = "1.1.0"
