@@ -16,7 +16,7 @@ name = "controller"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = "4.6.0"
+actix-web = "4.7.0"
 anyhow.workspace = true
 cached.workspace = true
 chrono = {version = "0.4.38", features = ["serde"]}
