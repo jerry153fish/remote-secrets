@@ -65,7 +65,7 @@ jobs:
 
       - name: Wait for localstack
         run: |
-          ./wait-for.sh http://localhost:4566/health -t 300 -- echo 'localstack up'
+          ./wait-for.sh http://localhost:4566/_localstack/health -t 300 -s -- echo 'localstack up'
           make init-test && sleep 2
 
       - name: Run unit tests
@@ -165,7 +165,7 @@ jobs:
 
       - name: Setup remote secrets in kind
         run: |
-          ./wait-for.sh http://localhost:4566/health -t 300 -- echo 'localstack up'
+          ./wait-for.sh http://localhost:4566/_localstack/health -t 300 -s -- echo 'localstack up'
           make init-test
           make kind-image-load
           make install-local
@@ -173,7 +173,7 @@ jobs:
 
           kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=30s
 
-          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:4566/health'
+          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:4566/_localstack/health'
 
       - name: Sanity check remote secrets
         run: |
