@@ -1,4 +1,4 @@
-use crate::aws_common::{is_test_env, localstack_endpoint};
+use crate::aws_common::{get_aws_sdk_config, is_test_env, localstack_endpoint};
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use crd::{Backend, RemoteValue, SecretData};
@@ -79,7 +79,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
             localstack_endpoint()
         );
         cloudformation_config_builder =
-            cloudformation_config_builder.endpoint_resolver(localstack_endpoint())
+            cloudformation_config_builder.endpoint_url(localstack_endpoint());
     }
     aws_sdk_cloudformation::Client::from_conf(cloudformation_config_builder.build())
 }
@@ -90,7 +90,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
 pub async fn get_cloudformation_outputs(
     stack_name: String,
 ) -> Result<Vec<aws_sdk_cloudformation::types::Output>> {
-    let shared_config = aws_config::from_env().load().await;
+    let shared_config = get_aws_sdk_config().await?;
     let client = cloudformation_client(&shared_config);
     let resp = client
         .describe_stacks()
@@ -100,11 +100,9 @@ pub async fn get_cloudformation_outputs(
 
     let result = resp
         .stacks()
-        .ok_or_else(|| anyhow!("no stacks found"))?
         .first()
         .ok_or_else(|| anyhow!("no first stack found"))?
-        .outputs()
-        .unwrap_or_default();
+        .outputs();
 
     Ok(result.to_owned())
 }

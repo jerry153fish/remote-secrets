@@ -13,5 +13,5 @@ pub fn localstack_endpoint() -> &'static str {
 }
 
 pub async fn get_aws_sdk_config() -> Result<aws_types::SdkConfig> {
-    Ok(aws_config::from_env().load().await)
+    Ok(aws_config::load_defaults(aws_config::BehaviorVersion::latest()).await)
 }
