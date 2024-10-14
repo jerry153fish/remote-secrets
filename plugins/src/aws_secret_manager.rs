@@ -1,4 +1,4 @@
-use crate::aws_common::{is_test_env, localstack_endpoint};
+use crate::aws_common::{get_aws_sdk_config, is_test_env, localstack_endpoint};
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use crd::{Backend, RemoteValue, SecretData};
@@ -55,7 +55,7 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
             localstack_endpoint()
         );
         secretsmanager_config_builder =
-            secretsmanager_config_builder.endpoint_resolver(localstack_endpoint())
+            secretsmanager_config_builder.endpoint_url(localstack_endpoint());
     }
     aws_sdk_secretsmanager::Client::from_conf(secretsmanager_config_builder.build())
 }
@@ -64,7 +64,7 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
 /// Will cache the result for 60s
 #[cached(time = 60, result = true)]
 pub async fn get_secretsmanager_parameter(name: String) -> Result<String> {
-    let shared_config = aws_config::from_env().load().await;
+    let shared_config =  get_aws_sdk_config().await?;
     let client = secretsmanager_client(&shared_config);
     let output = client.get_secret_value().secret_id(name).send().await?;
     let result = output.secret_string().unwrap_or_default();
