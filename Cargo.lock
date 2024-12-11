@@ -362,15 +362,15 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-appconfig"
-version = "1.53.0"
+version = "1.54.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fbf7427ed20e0765248fc4ac3db1902b5a7c0870d1e6b2698e136434bdd7418"
+checksum = "1a266bd36fea3f09ef4809e784dbc6ea00a685c72d5480b672a5faf933f99968"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
  "aws-smithy-async",
  "aws-smithy-http",
- "aws-smithy-json 0.60.7",
+ "aws-smithy-json 0.61.1",
  "aws-smithy-runtime",
  "aws-smithy-runtime-api",
  "aws-smithy-types",
