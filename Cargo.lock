@@ -555,9 +555,9 @@ dependencies = [
 
 [[package]]
 name = "aws-smithy-http"
-version = "0.60.11"
+version = "0.60.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c8bc3e8fdc6b8d07d976e301c02fe553f72a39b7a9fea820e023268467d7ab6"
+checksum = "7809c27ad8da6a6a68c454e651d4962479e81472aa19ae99e59f9aba1f9713cc"
 dependencies = [
  "aws-smithy-runtime-api",
  "aws-smithy-types",
