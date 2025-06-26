@@ -105,3 +105,6 @@ kind-image-load: ## load the kind image
 	kind load docker-image ${IMG} --name local
 
 install-local: install-crd manifest-local ## install the local cluster
+
+upgrade-rust: ## Upgrade Rust toolchain to the latest stable version
+	rustup update stable
