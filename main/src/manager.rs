@@ -175,7 +175,7 @@ impl Manager {
         );
 
         // All good. Start controller and return its future.
-        let drainer = Controller::new(rsecrets.clone(), ListParams::default())
+        let drainer = Controller::new(rsecrets.clone(), kube::runtime::watcher::Config::default())
             .run(reconcile, error_policy, context)
             .filter_map(|x| async move { std::result::Result::ok(x) })
             .for_each(|_| futures::future::ready(()))
