@@ -1,7 +1,6 @@
 use chrono::prelude::*;
 use futures::{future::BoxFuture, FutureExt, StreamExt};
 use k8s_openapi::api::core::v1::Secret;
-use k8s_openapi::ByteString;
 use kube::{
     api::{Api, ListParams, ResourceExt},
     runtime::{
@@ -22,7 +21,6 @@ use utils::metrics::FAILURES;
 use utils::metrics::RECONCILIATIONS;
 
 use anyhow::Result;
-use std::collections::BTreeMap;
 
 async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Action, kube::Error> {
     // let start = Instant::now();
@@ -42,7 +40,8 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
         RSecretAction::Create => {
             secret::add(client.clone(), &name, &ns).await?;
 
-            secret::create_k8s_secret(client.clone(), &rs).await?;
+            let data = secret::collect_secret_data(&rs).await;
+            secret::create_k8s_secret(client.clone(), &rs, &data).await?;
             // ctx.get_ref().metrics.create_counts.inc();
             Ok(Action::requeue(Duration::from_secs(20)))
         }
@@ -61,19 +60,15 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
 
             match secret {
                 Ok(secret) => {
+                    let data = secret::collect_secret_data(&rsecret).await;
+                    let new_hash_id = secret::calculate_secret_hash(&data);
                     let old_hash_id = secret::get_hash_id(&secret);
 
-                    let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
-                    data = secret::get_secret_data(&rsecret, data).await;
-                    let data_string = serde_json::to_string(&data).unwrap();
-                    let new_hash_id = secret::calculate_hash(&data_string);
-
-                    if new_hash_id.to_string().eq(&old_hash_id) {
+                    if old_hash_id == Some(new_hash_id) {
                         info!("No changes to rsecret {} in namespace {}", name, ns);
                     } else {
                         info!("Updating rsecret {} in namespace {}", name, ns);
-                        secret::update_k8s_secret(client.clone(), &rs, data_string.as_str())
-                            .await?;
+                        secret::update_k8s_secret(client.clone(), &rs, &data).await?;
                         // ctx.get_ref().metrics.update_counts.inc();
                     }
                 }
@@ -81,7 +76,8 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
                     // TODO: sort out the error type
                     secret::add(client.clone(), &name, &ns).await?;
 
-                    secret::create_k8s_secret(client.clone(), &rs).await?;
+                    let data = secret::collect_secret_data(&rsecret).await;
+                    secret::create_k8s_secret(client.clone(), &rs, &data).await?;
                 }
             }
 
@@ -90,6 +86,7 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 enum RSecretAction {
     Create,
     Delete,
@@ -108,6 +105,47 @@ fn determine_action(rsecret: &RSecret) -> RSecretAction {
         RSecretAction::Create
     } else {
         RSecretAction::Update
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crd::RSecretdSpec;
+    use k8s_openapi::apimachinery::pkg::apis::meta::v1::Time;
+    use kube::core::ObjectMeta;
+
+    fn base_rsecret() -> RSecret {
+        let spec = RSecretdSpec {
+            resources: vec![],
+            description: None,
+        };
+        let mut rsecret = RSecret::new("example", spec);
+        rsecret.metadata = ObjectMeta {
+            namespace: Some("default".into()),
+            ..ObjectMeta::default()
+        };
+        rsecret
+    }
+
+    #[test]
+    fn determine_action_returns_create_when_no_finalizer() {
+        let rsecret = base_rsecret();
+        assert_eq!(determine_action(&rsecret), RSecretAction::Create);
+    }
+
+    #[test]
+    fn determine_action_returns_update_when_finalizer_present() {
+        let mut rsecret = base_rsecret();
+        rsecret.metadata.finalizers = Some(vec!["rsecrets.jerry153fish.com/finalizer".into()]);
+        assert_eq!(determine_action(&rsecret), RSecretAction::Update);
+    }
+
+    #[test]
+    fn determine_action_returns_delete_when_deletion_timestamp_set() {
+        let mut rsecret = base_rsecret();
+        rsecret.metadata.deletion_timestamp = Some(Time(Utc::now()));
+        assert_eq!(determine_action(&rsecret), RSecretAction::Delete);
     }
 }
 

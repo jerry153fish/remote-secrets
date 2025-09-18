@@ -2059,6 +2059,7 @@ dependencies = [
  "prometheus",
  "serde",
  "serde_json",
+ "tokio",
  "utils",
 ]
 
