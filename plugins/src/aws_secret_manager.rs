@@ -64,7 +64,7 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
 /// Will cache the result for 60s
 #[cached(time = 60, result = true)]
 pub async fn get_secretsmanager_parameter(name: String) -> Result<String> {
-    let shared_config =  get_aws_sdk_config().await?;
+    let shared_config = get_aws_sdk_config().await?;
     let client = secretsmanager_client(&shared_config);
     let output = client.get_secret_value().secret_id(name).send().await?;
     let result = output.secret_string().unwrap_or_default();

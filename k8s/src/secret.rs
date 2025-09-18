@@ -1,4 +1,4 @@
-use crd::{BackendType, RSecret, RemoteValue, SecretData};
+use crd::{Backend, BackendType, RSecret, RemoteValue, SecretData};
 
 use anyhow::Result;
 use k8s_openapi::{api::core::v1::Secret, ByteString};
@@ -18,44 +18,27 @@ use std::collections::{hash_map::DefaultHasher, BTreeMap};
 use std::hash::{Hash, Hasher};
 use utils::value::{get_json_string_nested_value, merge_secret_data};
 
-pub async fn get_secret_data(
-    rsecret: &RSecret,
-    data: BTreeMap<String, ByteString>,
-) -> BTreeMap<String, ByteString> {
+pub async fn collect_secret_data(rsecret: &RSecret) -> BTreeMap<String, ByteString> {
     let mut secrets = BTreeMap::new();
 
     for backend in rsecret.spec.resources.iter() {
-        match backend.backend {
-            BackendType::Plaintext => {
-                let plain_text_secret_data = PlainText::from_backend(backend).get_value().await;
-                secrets = merge_secret_data(plain_text_secret_data, secrets);
-            }
-            BackendType::SecretManager => {
-                let secret_manager_secret_data =
-                    SecretManager::from_backend(backend).get_value().await;
-                secrets = merge_secret_data(secret_manager_secret_data, secrets);
-            }
-            BackendType::SSM => {
-                let aws_ssm_data = SSM::from_backend(backend).get_value().await;
-                secrets = merge_secret_data(aws_ssm_data, secrets);
-            }
-            BackendType::Cloudformation => {
-                let aws_cfn_data = Cloudformation::from_backend(backend).get_value().await;
-                secrets = merge_secret_data(aws_cfn_data, secrets);
-            }
-            BackendType::Pulumi => {
-                let pulumi_data = Pulumi::from_backend(backend).get_value().await;
-                secrets = merge_secret_data(pulumi_data, secrets);
-            }
-            BackendType::Vault => {
-                let data = Vault::from_backend(backend).get_value().await;
-                secrets = merge_secret_data(data, secrets);
-            }
-            _ => {}
-        };
+        let backend_data = resolve_backend_data(backend).await;
+        secrets = merge_secret_data(backend_data, secrets);
     }
 
-    merge_secret_data(secrets, data)
+    secrets
+}
+
+async fn resolve_backend_data(backend: &Backend) -> BTreeMap<String, ByteString> {
+    match backend.backend {
+        BackendType::Plaintext => PlainText::from_backend(backend).get_value().await,
+        BackendType::SecretManager => SecretManager::from_backend(backend).get_value().await,
+        BackendType::SSM => SSM::from_backend(backend).get_value().await,
+        BackendType::Cloudformation => Cloudformation::from_backend(backend).get_value().await,
+        BackendType::Pulumi => Pulumi::from_backend(backend).get_value().await,
+        BackendType::Vault => Vault::from_backend(backend).get_value().await,
+        _ => BTreeMap::new(),
+    }
 }
 
 /// Adds a finalizer record into an `RSecret` kind of resource. If the finalizer already exists,
@@ -87,7 +70,11 @@ pub async fn delete(client: Client, name: &str, namespace: &str) -> Result<RSecr
 }
 
 /// create a new secret from rsecret
-pub async fn create_k8s_secret(client: Client, rsecret: &RSecret) -> Result<Secret, kube::Error> {
+pub async fn create_k8s_secret(
+    client: Client,
+    rsecret: &RSecret,
+    data: &BTreeMap<String, ByteString>,
+) -> Result<Secret, kube::Error> {
     let name = rsecret.metadata.name.clone().unwrap_or_default();
     let ns = rsecret
         .metadata
@@ -95,24 +82,14 @@ pub async fn create_k8s_secret(client: Client, rsecret: &RSecret) -> Result<Secr
         .clone()
         .unwrap_or_else(|| "default".to_owned());
 
-    let mut labels: BTreeMap<String, String> = BTreeMap::new();
-
-    let mut data: BTreeMap<String, ByteString> = BTreeMap::new();
-
-    data = get_secret_data(rsecret, data).await;
-
-    let data_string = serde_json::to_string(&data).unwrap();
-
-    let hash_id = calculate_hash(&data_string);
-
-    labels.insert("app".to_owned(), name.clone());
-    labels.insert("hash_id".to_owned(), hash_id.to_string());
+    let hash_id = calculate_secret_hash(data);
+    let labels = build_labels(&name, hash_id);
 
     let k8s_secret: Secret = Secret {
         metadata: ObjectMeta {
             name: Some(name.clone()),
             namespace: Some(ns.clone()),
-            labels: Some(labels.clone()),
+            labels: Some(labels),
             ..ObjectMeta::default()
         },
         type_: Some("Opaque".to_owned()),
@@ -131,7 +108,7 @@ pub async fn create_k8s_secret(client: Client, rsecret: &RSecret) -> Result<Secr
 pub async fn update_k8s_secret(
     client: Client,
     rsecret: &RSecret,
-    data_string: &str,
+    data: &BTreeMap<String, ByteString>,
 ) -> Result<Secret, kube::Error> {
     let name = rsecret.metadata.name.clone().unwrap_or_default();
     let ns = rsecret
@@ -143,9 +120,9 @@ pub async fn update_k8s_secret(
     let k8s_secret_api: Api<Secret> = Api::namespaced(client.clone(), &ns);
 
     if k8s_secret_api.get(&name).await.is_ok() {
-        let hash_id = calculate_hash(&data_string.to_string());
+        let hash_id = calculate_secret_hash(data);
 
-        let data_value = serde_json::from_str::<Value>(data_string).unwrap();
+        let data_value = serde_json::to_value(data).map_err(kube::Error::SerdeError)?;
 
         let secret_patch_value = json!({
             "metadata": {
@@ -161,7 +138,7 @@ pub async fn update_k8s_secret(
             .patch(&name, &PatchParams::default(), &patch)
             .await
     } else {
-        create_k8s_secret(client.clone(), rsecret).await
+        create_k8s_secret(client.clone(), rsecret, data).await
     }
 }
 
@@ -186,11 +163,20 @@ pub fn calculate_hash<T: Hash>(t: &T) -> u64 {
     s.finish()
 }
 
+pub fn calculate_secret_hash(data: &BTreeMap<String, ByteString>) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    for (key, value) in data {
+        key.hash(&mut hasher);
+        hasher.write(&value.0);
+    }
+    hasher.finish()
+}
+
 /// get the hash id from the k8s secret
-pub fn get_hash_id(secret: &Secret) -> String {
-    let labels = secret.metadata.labels.as_ref().unwrap();
-    let hash_id = labels.get("hash_id").unwrap();
-    hash_id.to_string()
+pub fn get_hash_id(secret: &Secret) -> Option<u64> {
+    let labels = secret.metadata.labels.as_ref()?;
+    let hash_id = labels.get("hash_id")?;
+    hash_id.parse().ok()
 }
 
 // TODO: a better way error handling
@@ -226,4 +212,83 @@ pub fn rsecret_data_to_secret_data(
     }
 
     secrets
+}
+
+fn build_labels(name: &str, hash_id: u64) -> BTreeMap<String, String> {
+    let mut labels: BTreeMap<String, String> = BTreeMap::new();
+    labels.insert("app".to_owned(), name.to_owned());
+    labels.insert("hash_id".to_owned(), hash_id.to_string());
+    labels
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crd::RSecretdSpec;
+    use kube::core::ObjectMeta;
+
+    fn sample_rsecret() -> RSecret {
+        let backend = Backend {
+            backend: BackendType::Plaintext,
+            data: vec![SecretData {
+                value: "plain-value".into(),
+                is_json_string: None,
+                remote_path: None,
+                key: Some("plain-key".into()),
+                configuration_profile_id: None,
+                version_number: None,
+            }],
+            pulumi_token: None,
+        };
+
+        let spec = RSecretdSpec {
+            resources: vec![backend],
+            description: None,
+        };
+
+        let mut rsecret = RSecret::new("example", spec);
+        rsecret.metadata.namespace = Some("default".into());
+        rsecret
+    }
+
+    #[tokio::test]
+    async fn collects_plaintext_secret_data() {
+        let rsecret = sample_rsecret();
+        let data = collect_secret_data(&rsecret).await;
+        assert_eq!(data.len(), 1);
+        let value = data.get("plain-key").expect("missing key");
+        assert_eq!(value.0.as_slice(), b"plain-value");
+    }
+
+    #[test]
+    fn parses_hash_id_from_secret_labels() {
+        let mut labels = BTreeMap::new();
+        labels.insert("hash_id".into(), "42".into());
+        let secret = Secret {
+            metadata: ObjectMeta {
+                labels: Some(labels),
+                ..ObjectMeta::default()
+            },
+            ..Secret::default()
+        };
+
+        assert_eq!(get_hash_id(&secret), Some(42));
+    }
+
+    #[test]
+    fn returns_none_when_hash_label_missing() {
+        let secret = Secret {
+            metadata: ObjectMeta::default(),
+            ..Secret::default()
+        };
+
+        assert_eq!(get_hash_id(&secret), None);
+    }
+
+    #[test]
+    fn builds_labels_with_hash_and_app() {
+        let labels = build_labels("name", 10);
+        assert_eq!(labels.get("app"), Some(&"name".to_string()));
+        assert_eq!(labels.get("hash_id"), Some(&"10".to_string()));
+    }
 }
