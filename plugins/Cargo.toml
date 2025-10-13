@@ -17,7 +17,7 @@ aws-sdk-cloudformation = "1.56.0"
 aws-sdk-secretsmanager = "1.54.0"
 aws-sdk-ssm = "1.56.0"
 aws-smithy-http = "0.62.0"
-aws-types = "1.3.6"
+aws-types = "1.3.9"
 cached.workspace = true
 crd = {path = "../crd"}
 http = "1.3"
