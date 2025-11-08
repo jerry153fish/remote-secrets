@@ -26,7 +26,7 @@ cached = "0.40.0"
 futures = "0.3"
 json_dotpath = "1.1.0"
 kube = { version = "1.1.0", features = ["runtime", "derive"] }
-k8s-openapi = { version = "0.25.0", features = ["latest"] }
+k8s-openapi = { version = "0.26.0", features = ["latest"] }
 lazy_static = "1.5.0"
 log = "0.4.28"
 log4rs = "1.4.0"
