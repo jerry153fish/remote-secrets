@@ -970,7 +970,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
- "k8s-openapi",
+ "k8s-openapi 0.27.0",
  "kube",
  "log",
  "schemars",
@@ -1936,6 +1936,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
+name = "jiff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3590fea8e9e22d449600c9bbd481a8163bef223e4ff938e5f55899f8cf1adb93"
+dependencies = [
+ "portable-atomic",
+ "portable-atomic-util",
+ "serde",
+]
+
+[[package]]
 name = "jobserver"
 version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2008,7 +2019,7 @@ dependencies = [
  "anyhow",
  "crd",
  "json_dotpath",
- "k8s-openapi",
+ "k8s-openapi 0.27.0",
  "kube",
  "lazy_static",
  "log",
@@ -2034,12 +2045,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "k8s-openapi"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05a6d6f3611ad1d21732adbd7a2e921f598af6c92d71ae6e2620da4b67ee1f0d"
+dependencies = [
+ "base64 0.22.1",
+ "jiff",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kube"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "778f98664beaf4c3c11372721e14310d1ae00f5e2d9aabcf8906c881aa4e9f51"
 dependencies = [
- "k8s-openapi",
+ "k8s-openapi 0.25.0",
  "kube-client",
  "kube-core",
  "kube-derive",
@@ -2067,7 +2090,7 @@ dependencies = [
  "hyper-timeout",
  "hyper-util",
  "jsonpath-rust",
- "k8s-openapi",
+ "k8s-openapi 0.25.0",
  "kube-core",
  "pem",
  "rustls 0.23.28",
@@ -2094,7 +2117,7 @@ dependencies = [
  "form_urlencoded",
  "http 1.4.0",
  "json-patch",
- "k8s-openapi",
+ "k8s-openapi 0.25.0",
  "schemars",
  "serde",
  "serde-value",
@@ -2131,7 +2154,7 @@ dependencies = [
  "hashbrown 0.15.4",
  "hostname",
  "json-patch",
- "k8s-openapi",
+ "k8s-openapi 0.25.0",
  "kube-client",
  "parking_lot",
  "pin-project",
@@ -2550,7 +2573,7 @@ dependencies = [
  "crd",
  "http 1.4.0",
  "json_dotpath",
- "k8s-openapi",
+ "k8s-openapi 0.27.0",
  "kube",
  "log",
  "openssl",
@@ -2559,6 +2582,21 @@ dependencies = [
  "serde_json",
  "tokio",
  "utils",
+]
+
+[[package]]
+name = "portable-atomic"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f89776e4d69bb58bc6993e99ffa1d11f228b839984854c7daeb5d37f87cbe950"
+
+[[package]]
+name = "portable-atomic-util"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8a2f0d8d040d7848a709caf78912debcc3f33ee4b3cac47d73d1e1069e83507"
+dependencies = [
+ "portable-atomic",
 ]
 
 [[package]]
@@ -2727,7 +2765,7 @@ dependencies = [
  "futures",
  "json_dotpath",
  "k8s",
- "k8s-openapi",
+ "k8s-openapi 0.27.0",
  "kube",
  "log",
  "log4rs",
@@ -3617,7 +3655,7 @@ dependencies = [
  "anyhow",
  "crd",
  "json_dotpath",
- "k8s-openapi",
+ "k8s-openapi 0.27.0",
  "lazy_static",
  "log",
  "log4rs",
