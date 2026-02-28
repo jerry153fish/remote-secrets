@@ -53,7 +53,7 @@ pub fn get_secret_data(
                         }
                     }
                     Err(e) => {
-                        log::error!("{}", e);
+                        log::error!("{e}");
                     }
                 }
             }
@@ -67,7 +67,7 @@ pub fn get_secret_data(
                 secrets = data;
             }
             Err(e) => {
-                log::error!("{}", e);
+                log::error!("{e}");
             }
         }
     }
@@ -79,7 +79,7 @@ pub fn merge_secret_data(
     to_merge: BTreeMap<String, ByteString>,
     merged: BTreeMap<String, ByteString>,
 ) -> BTreeMap<String, ByteString> {
-    to_merge.into_iter().chain(merged.into_iter()).collect()
+    to_merge.into_iter().chain(merged).collect()
 }
 
 #[cfg(test)]
@@ -126,8 +126,8 @@ mod tests {
 
         let r_data: SecretData = serde_json::from_str(r_data_raw).unwrap();
 
-        let result = get_secret_data(&r_data, &value_string);
+        let result = get_secret_data(&r_data, value_string);
 
-        println!("{:?}", result);
+        println!("{result:?}");
     }
 }

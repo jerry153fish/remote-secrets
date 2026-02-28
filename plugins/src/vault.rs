@@ -1,6 +1,7 @@
 use crate::aws_common::is_test_env;
 use async_trait::async_trait;
 use std::collections::BTreeMap;
+use std::time::Duration;
 
 use cached::proc_macro::cached;
 use k8s_openapi::ByteString;
@@ -40,7 +41,7 @@ impl RemoteValue for Vault {
                         .collect();
                 }
                 Err(err) => {
-                    log::error!("{}", err);
+                    log::error!("{err}");
                 }
             }
         }
@@ -72,9 +73,9 @@ pub fn get_vault_secret_endpoint() -> Result<String> {
     };
 
     if url.ends_with('/') {
-        Ok(format!("{}v1/secret/data/", url))
+        Ok(format!("{url}v1/secret/data/"))
     } else {
-        Ok(format!("{}/v1/secret/data/", url))
+        Ok(format!("{url}/v1/secret/data/"))
     }
 }
 
@@ -92,7 +93,7 @@ pub fn get_vault_client(key: String) -> Result<reqwest::RequestBuilder> {
     let endpoint = get_vault_secret_endpoint()?;
     let token = get_vault_token()?;
 
-    let url = format!("{}{}", endpoint, key);
+    let url = format!("{endpoint}{key}");
 
     let client = reqwest::Client::new()
         .get(url)
@@ -107,6 +108,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_vault_string_value() {
+        if std::env::var("VAULT_ADDR").is_err() || std::env::var("VAULT_TOKEN").is_err() {
+            eprintln!("Skipping vault integration test: VAULT_ADDR/VAULT_TOKEN not set");
+            return;
+        }
         let rest = get_vault_value("vaultString".to_string()).await.unwrap();
 
         assert_eq!(rest, "\"vaultString\"".to_string());
@@ -114,6 +119,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_vault_json_value() {
+        if std::env::var("VAULT_ADDR").is_err() || std::env::var("VAULT_TOKEN").is_err() {
+            eprintln!("Skipping vault integration test: VAULT_ADDR/VAULT_TOKEN not set");
+            return;
+        }
         let rest = get_vault_value("vaultJson".to_string()).await.unwrap();
 
         assert_eq!(

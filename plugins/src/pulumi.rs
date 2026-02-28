@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use std::collections::BTreeMap;
+use std::time::Duration;
 
 use cached::proc_macro::cached;
 use k8s_openapi::ByteString;
@@ -50,7 +51,7 @@ impl RemoteValue for Pulumi {
                             .collect();
                     }
                     Err(err) => {
-                        log::error!("{}", err);
+                        log::error!("{err}");
                     }
                 }
             } else {
@@ -69,7 +70,7 @@ impl RemoteValue for Pulumi {
                             .collect();
                     }
                     Err(err) => {
-                        log::error!("{}", err);
+                        log::error!("{err}");
                     }
                 }
             }
@@ -115,10 +116,10 @@ pub fn get_pulumi_client(
     let token = get_pulumi_token(pulumi_token)?;
     let pulumi_api_endpoint = get_pulumi_endpoint()?;
 
-    let authorization = format!("token {}", token);
+    let authorization = format!("token {token}");
 
     let client = reqwest::Client::new()
-        .get(format!("{}/{}/export", pulumi_api_endpoint, path))
+        .get(format!("{pulumi_api_endpoint}/{path}/export"))
         .header("Accept", "application/vnd.pulumi+8")
         .header("Content-Type", "application/json")
         .header("Authorization", authorization);
@@ -167,7 +168,7 @@ mod tests {
         if std::env::var("PULUMI_ACCESS_TOKEN").is_ok() {
             let result2 = get_pulumi_outputs("sharonlucky11/test/dev".to_string(), None).await;
 
-            println!("{:?}", result2);
+            println!("{result2:?}");
         }
     }
 }

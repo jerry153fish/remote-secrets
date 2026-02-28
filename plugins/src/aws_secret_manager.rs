@@ -6,6 +6,7 @@ use crd::{Backend, RemoteValue, SecretData};
 use anyhow::Result;
 use k8s_openapi::ByteString;
 use std::collections::BTreeMap;
+use std::time::Duration;
 
 use utils::value::get_secret_data;
 
@@ -37,7 +38,7 @@ impl RemoteValue for SecretManager {
                         .collect();
                 }
                 Err(err) => {
-                    log::error!("{}", err);
+                    log::error!("{err}");
                 }
             }
         }
@@ -74,10 +75,15 @@ pub async fn get_secretsmanager_parameter(name: String) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::aws_common::is_test_env;
     use serde_json;
 
     #[tokio::test]
     async fn test_get_secretsmanager_parameter() {
+        if !is_test_env() {
+            eprintln!("Skipping AWS integration test: RUN_TEST not set");
+            return;
+        }
         let result = get_secretsmanager_parameter("MyTestSecret".to_string())
             .await
             .unwrap();
@@ -105,8 +111,6 @@ mod tests {
 
         let _value = result.await;
 
-        println!("{:?}", _value);
-
-        assert!(true);
+        println!("{_value:?}");
     }
 }

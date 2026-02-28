@@ -8,10 +8,17 @@ use actix_web::{middleware, web::Data, App, HttpServer};
 use anyhow::Result;
 pub use controller::*;
 
+fn install_rustls_provider() {
+    // With latest deps both rustls crypto backends can be enabled transitively.
+    // Install one explicitly to avoid runtime panic.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     init_log()?;
     register_custom_metrics();
+    install_rustls_provider();
     info!("Starting controller");
 
     let (manager, drainer) = Manager::new().await;
