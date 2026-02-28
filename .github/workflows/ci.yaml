@@ -222,6 +222,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/jerry153fish/remote-secrets
+          flavor: |
+            latest=auto
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
 
       # setup Docker build action
       - name: Set up Docker Buildx
@@ -249,9 +257,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          tags: |
-            ${{ github.ref != 'refs/heads/main' && steps.meta.outputs.tags || '' }}
-            ${{ github.ref == 'refs/heads/main' && 'ghcr.io/jerry153fish/remote-secrets:latest' || '' }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
           platforms: linux/amd64,linux/arm64
