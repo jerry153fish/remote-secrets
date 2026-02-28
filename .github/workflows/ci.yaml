@@ -37,10 +37,10 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: ⚡ Cache Cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -51,7 +51,7 @@ jobs:
             ${{ runner.os }}-cache-
 
       - name: ⚡ Cache Cargo Target
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             target
@@ -102,10 +102,10 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Create k8s Kind Cluster
-        uses: helm/kind-action@v1.12.0
+        uses: helm/kind-action@v1.13.0
         with:
           cluster_name: local
           ignore_failed_clean: true
@@ -124,7 +124,7 @@ jobs:
           install: true
 
       - name: ⚡ Cache Docker layers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -202,7 +202,7 @@ jobs:
 
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@main
@@ -221,7 +221,7 @@ jobs:
           install: true
 
       - name: Cache Docker layers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
