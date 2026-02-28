@@ -34,7 +34,10 @@ COPY utils utils
 COPY plugins plugins
 COPY k8s k8s
 
-RUN cargo build --release
+# Ensure copied real sources are newer than the dummy bootstrap sources,
+# otherwise cargo may incorrectly reuse the dummy-built binary from cache.
+RUN find crd main utils plugins k8s -type f \( -name '*.rs' -o -name 'Cargo.toml' \) -exec touch {} +
+RUN cargo build --release --bin controller
 
 FROM alpine:3.23
 RUN apk --no-cache add ca-certificates
