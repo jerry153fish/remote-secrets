@@ -38,6 +38,11 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.93.1
+          components: clippy, rustfmt
 
       - name: ⚡ Cache Cargo
         uses: actions/cache@v5
@@ -103,6 +108,11 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v6
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.93.1
+          components: clippy, rustfmt
 
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.13.0
