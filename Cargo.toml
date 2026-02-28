@@ -17,7 +17,7 @@ edition = "2021"
 license = "MIT"
 readme = "./README.md"
 repository = "https://github.com/jerry153fish/remote-secrets"
-version = "1.0.6"
+version = "1.0.7"
 
 [workspace.dependencies]
 anyhow = "1.0"
