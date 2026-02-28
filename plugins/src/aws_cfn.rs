@@ -44,7 +44,7 @@ impl RemoteValue for Cloudformation {
                             .collect();
                     }
                     Err(err) => {
-                        log::error!("{}", err);
+                        log::error!("{err}");
                     }
                 }
             } else {
@@ -60,7 +60,7 @@ impl RemoteValue for Cloudformation {
                             .collect();
                     }
                     Err(err) => {
-                        log::error!("{}", err);
+                        log::error!("{err}");
                     }
                 }
             }
@@ -144,10 +144,15 @@ pub async fn get_cloudformation_outputs_as_secret_data(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::aws_common::is_test_env;
     use serde_json;
 
     #[tokio::test]
     async fn test_get_cloudformation_stack() {
+        if !is_test_env() {
+            eprintln!("Skipping AWS integration test: RUN_TEST not set");
+            return;
+        }
         let result = get_cloudformation_output("MyTestStack".to_string(), "S3Bucket".to_string())
             .await
             .unwrap();
@@ -157,13 +162,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cloudformation_outputs() {
+        if !is_test_env() {
+            eprintln!("Skipping AWS integration test: RUN_TEST not set");
+            return;
+        }
         let result = get_cloudformation_outputs_as_secret_data("MyTestStack".to_string())
             .await
             .unwrap();
 
         let data_string = serde_json::to_string(&result).unwrap();
 
-        assert_eq!(data_string.contains("UzNCdWNrZXQ"), true);
+        assert!(data_string.contains("UzNCdWNrZXQ"));
     }
 
     #[tokio::test]
@@ -187,8 +196,6 @@ mod tests {
 
         let _value = result.await;
 
-        println!("{:?}", _value);
-
-        assert!(true);
+        println!("{_value:?}");
     }
 }

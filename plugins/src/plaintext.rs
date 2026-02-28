@@ -64,7 +64,5 @@ mod tests {
         let result = plaintext.get_value();
 
         let _value = result.await;
-
-        assert!(true);
     }
 }

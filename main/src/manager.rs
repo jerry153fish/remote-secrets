@@ -53,7 +53,7 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
         }
 
         RSecretAction::Update => {
-            info!("Updating rsecret {} in namespace {}", name, ns);
+            info!("Updating rsecret {name} in namespace {ns}");
 
             let k8s_secrets: Api<Secret> = Api::namespaced(client.clone(), &ns);
             let secret = k8s_secrets.get(&name).await;
@@ -65,9 +65,9 @@ async fn reconcile(rsecret: Arc<RSecret>, ctx: Arc<ContextData>) -> Result<Actio
                     let old_hash_id = secret::get_hash_id(&secret);
 
                     if old_hash_id == Some(new_hash_id) {
-                        info!("No changes to rsecret {} in namespace {}", name, ns);
+                        info!("No changes to rsecret {name} in namespace {ns}");
                     } else {
-                        info!("Updating rsecret {} in namespace {}", name, ns);
+                        info!("Updating rsecret {name} in namespace {ns}");
                         secret::update_k8s_secret(client.clone(), &rs, &data).await?;
                         // ctx.get_ref().metrics.update_counts.inc();
                     }
@@ -100,7 +100,7 @@ fn determine_action(rsecret: &RSecret) -> RSecretAction {
         .meta()
         .finalizers
         .as_ref()
-        .map_or(true, |finalizers| finalizers.is_empty())
+        .is_none_or(|finalizers| finalizers.is_empty())
     {
         RSecretAction::Create
     } else {
@@ -150,7 +150,7 @@ mod tests {
 }
 
 fn error_policy(_r: Arc<RSecret>, error: &kube::Error, _ctx: Arc<ContextData>) -> Action {
-    warn!("reconcile failed: {:?}", error);
+    warn!("reconcile failed: {error:?}");
     FAILURES.inc();
     Action::requeue(Duration::from_secs(5 * 60))
 }

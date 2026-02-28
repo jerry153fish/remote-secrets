@@ -202,7 +202,7 @@ pub fn rsecret_data_to_secret_data(
                         }
                     }
                     Err(e) => {
-                        log::error!("{}", e);
+                        log::error!("{e}");
                     }
                 }
             }
