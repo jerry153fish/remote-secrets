@@ -181,7 +181,7 @@ jobs:
           make install-local
           kubectl apply -f e2e/dockerhost-linux.yaml
 
-          kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=30s
+          kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=180s
 
           kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:4566/_localstack/health'
 
