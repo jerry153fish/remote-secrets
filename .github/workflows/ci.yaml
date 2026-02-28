@@ -82,6 +82,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+      security-events: write
+      actions: read
     timeout-minutes: 60
 
     services:
