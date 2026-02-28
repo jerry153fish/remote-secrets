@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn determine_action_returns_delete_when_deletion_timestamp_set() {
         let mut rsecret = base_rsecret();
-        rsecret.metadata.deletion_timestamp = Some(Time(Utc::now()));
+        rsecret.metadata.deletion_timestamp = Some(Time("2026-01-01T00:00:00Z".parse().unwrap()));
         assert_eq!(determine_action(&rsecret), RSecretAction::Delete);
     }
 }

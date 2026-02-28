@@ -6,6 +6,7 @@ use crd::{Backend, RemoteValue, SecretData};
 use anyhow::Result;
 use k8s_openapi::ByteString;
 use std::collections::BTreeMap;
+use std::time::Duration;
 
 use utils::value::get_secret_data;
 

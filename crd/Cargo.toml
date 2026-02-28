@@ -15,7 +15,7 @@ chrono = {version = "0.4.44", features = ["serde"]}
 k8s-openapi.workspace = true
 kube.workspace = true
 log.workspace = true
-schemars = {version = "0.8.22", features = ["chrono"]}
+schemars = {version = "1.2.1", features = ["chrono04"]}
 serde.workspace = true
 serde_json.workspace = true
 serde_yaml = "0.9.34"
