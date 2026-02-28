@@ -6,6 +6,6 @@ patchesStrategicMerge:
   - secret_patch.yaml
 
 images:
-  - name: jerry153fish/remote-secrets
+  - name: ghcr.io/jerry153fish/remote-secrets
     newName: controller
     newTag: local

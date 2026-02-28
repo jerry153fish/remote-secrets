@@ -25,7 +25,7 @@ spec:
       serviceAccountName: remote-secrets
       containers:
         - name: remote-secrets-operator
-          image: jerry153fish/remote-secrets:latest
+          image: ghcr.io/jerry153fish/remote-secrets:latest
           livenessProbe:
             httpGet:
               path: /healthz
