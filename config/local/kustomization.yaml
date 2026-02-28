@@ -1,9 +1,9 @@
-bases:
+resources:
   - ../default
 
-patchesStrategicMerge:
-  - lifecycle_patch.yaml
-  - secret_patch.yaml
+patches:
+  - path: lifecycle_patch.yaml
+  - path: secret_patch.yaml
 
 images:
   - name: ghcr.io/jerry153fish/remote-secrets
