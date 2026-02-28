@@ -152,11 +152,9 @@ jobs:
           tags: controller:local
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
-            type=registry,ref=ghcr.io/jerry153fish/remote-secrets:buildcache
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache
             type=gha,scope=sanity-check
-          cache-to: |
-            type=registry,ref=ghcr.io/jerry153fish/remote-secrets:buildcache,mode=max
-            type=gha,scope=sanity-check,mode=max
+          cache-to: type=gha,scope=sanity-check,mode=max
           push: false
           load: true
 
@@ -223,7 +221,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/jerry153fish/remote-secrets
+          images: ghcr.io/${{ github.repository_owner }}/remote-secrets
           flavor: |
             latest=auto
           tags: |
@@ -257,9 +255,9 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           cache-from: |
-            type=registry,ref=ghcr.io/jerry153fish/remote-secrets:buildcache
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache
             type=gha,scope=docker-push
           cache-to: |
-            type=registry,ref=ghcr.io/jerry153fish/remote-secrets:buildcache,mode=max
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache,mode=max
             type=gha,scope=docker-push,mode=max
 
