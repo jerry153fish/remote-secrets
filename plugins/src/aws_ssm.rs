@@ -6,6 +6,7 @@ use crd::{Backend, RemoteValue, SecretData};
 use anyhow::{anyhow, Result};
 use k8s_openapi::ByteString;
 use std::collections::BTreeMap;
+use std::time::Duration;
 
 use utils::value::get_secret_data;
 
@@ -51,7 +52,7 @@ pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
     let mut ssm_config_builder = aws_sdk_ssm::config::Builder::from(conf);
     if is_test_env() {
         log::info!("Using localstack for ssm {}", localstack_endpoint());
-        ssm_config_builder = ssm_config_builder.endpoint_resolver(localstack_endpoint())
+        ssm_config_builder = ssm_config_builder.endpoint_url(localstack_endpoint())
     }
     aws_sdk_ssm::Client::from_conf(ssm_config_builder.build())
 }

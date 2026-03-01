@@ -6,6 +6,7 @@ use crd::{Backend, RemoteValue, SecretData};
 use anyhow::{anyhow, Result};
 use k8s_openapi::ByteString;
 use std::collections::BTreeMap;
+use std::time::Duration;
 
 use utils::value::get_secret_data;
 
@@ -79,7 +80,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
             localstack_endpoint()
         );
         cloudformation_config_builder =
-            cloudformation_config_builder.endpoint_resolver(localstack_endpoint())
+            cloudformation_config_builder.endpoint_url(localstack_endpoint())
     }
     aws_sdk_cloudformation::Client::from_conf(cloudformation_config_builder.build())
 }
@@ -100,11 +101,9 @@ pub async fn get_cloudformation_outputs(
 
     let result = resp
         .stacks()
-        .ok_or_else(|| anyhow!("no stacks found"))?
         .first()
         .ok_or_else(|| anyhow!("no first stack found"))?
-        .outputs()
-        .unwrap_or_default();
+        .outputs();
 
     Ok(result.to_owned())
 }

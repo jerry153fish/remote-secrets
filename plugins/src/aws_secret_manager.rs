@@ -6,6 +6,7 @@ use crd::{Backend, RemoteValue, SecretData};
 use anyhow::Result;
 use k8s_openapi::ByteString;
 use std::collections::BTreeMap;
+use std::time::Duration;
 
 use utils::value::get_secret_data;
 
@@ -55,7 +56,7 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
             localstack_endpoint()
         );
         secretsmanager_config_builder =
-            secretsmanager_config_builder.endpoint_resolver(localstack_endpoint())
+            secretsmanager_config_builder.endpoint_url(localstack_endpoint())
     }
     aws_sdk_secretsmanager::Client::from_conf(secretsmanager_config_builder.build())
 }
