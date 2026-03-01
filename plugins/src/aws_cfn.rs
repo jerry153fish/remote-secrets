@@ -1,4 +1,4 @@
-use crate::aws_common::{get_aws_sdk_config, is_test_env, localstack_endpoint};
+use crate::aws_common::{is_test_env, localstack_endpoint};
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use crd::{Backend, RemoteValue, SecretData};
@@ -6,7 +6,6 @@ use crd::{Backend, RemoteValue, SecretData};
 use anyhow::{anyhow, Result};
 use k8s_openapi::ByteString;
 use std::collections::BTreeMap;
-use std::time::Duration;
 
 use utils::value::get_secret_data;
 
@@ -45,7 +44,7 @@ impl RemoteValue for Cloudformation {
                             .collect();
                     }
                     Err(err) => {
-                        log::error!("{err}");
+                        log::error!("{}", err);
                     }
                 }
             } else {
@@ -61,7 +60,7 @@ impl RemoteValue for Cloudformation {
                             .collect();
                     }
                     Err(err) => {
-                        log::error!("{err}");
+                        log::error!("{}", err);
                     }
                 }
             }
@@ -80,7 +79,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
             localstack_endpoint()
         );
         cloudformation_config_builder =
-            cloudformation_config_builder.endpoint_url(localstack_endpoint());
+            cloudformation_config_builder.endpoint_resolver(localstack_endpoint())
     }
     aws_sdk_cloudformation::Client::from_conf(cloudformation_config_builder.build())
 }
@@ -91,7 +90,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
 pub async fn get_cloudformation_outputs(
     stack_name: String,
 ) -> Result<Vec<aws_sdk_cloudformation::types::Output>> {
-    let shared_config = get_aws_sdk_config().await?;
+    let shared_config = aws_config::from_env().load().await;
     let client = cloudformation_client(&shared_config);
     let resp = client
         .describe_stacks()
@@ -101,9 +100,11 @@ pub async fn get_cloudformation_outputs(
 
     let result = resp
         .stacks()
+        .ok_or_else(|| anyhow!("no stacks found"))?
         .first()
         .ok_or_else(|| anyhow!("no first stack found"))?
-        .outputs();
+        .outputs()
+        .unwrap_or_default();
 
     Ok(result.to_owned())
 }
@@ -145,15 +146,10 @@ pub async fn get_cloudformation_outputs_as_secret_data(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::aws_common::is_test_env;
     use serde_json;
 
     #[tokio::test]
     async fn test_get_cloudformation_stack() {
-        if !is_test_env() {
-            eprintln!("Skipping AWS integration test: RUN_TEST not set");
-            return;
-        }
         let result = get_cloudformation_output("MyTestStack".to_string(), "S3Bucket".to_string())
             .await
             .unwrap();
@@ -163,10 +159,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cloudformation_outputs() {
-        if !is_test_env() {
-            eprintln!("Skipping AWS integration test: RUN_TEST not set");
-            return;
-        }
         let result = get_cloudformation_outputs_as_secret_data("MyTestStack".to_string())
             .await
             .unwrap();
@@ -197,6 +189,6 @@ mod tests {
 
         let _value = result.await;
 
-        println!("{_value:?}");
+        println!("{:?}", _value);
     }
 }
