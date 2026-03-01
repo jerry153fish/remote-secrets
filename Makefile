@@ -61,8 +61,16 @@ manifest-local-clean: ## Clean the manifest file for local testing.
 crdgen: ## Generate CRDs
 	cargo run --bin crd > config/crd.yaml
 
-test: ## run the tests
-	export TEST_ENV=true && cargo test --all-targets -- --nocapture
+test: ## run integration-style tests (requires mock services initialized)
+	export TEST_ENV=true && cargo test --workspace --all-features --all-targets -- --nocapture
+
+test-unit: ## run fast unit tests only
+	cargo test -p utils --all-features
+
+clippy: ## run clippy with warnings as errors
+	cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+check: fmt clippy test-unit ## run local CI checks without external services
 
 init-test: ## init the test environment
 	mkdir debug || true

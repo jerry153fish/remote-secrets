@@ -186,3 +186,35 @@ make init-test
 ```
 make test
 ```
+
+### Metrics
+
+The controller exposes Prometheus metrics at `/metrics` on port `8080`.
+
+Sync operation metrics:
+
+- `rsecrets_controller_sync_attempts_total{action,result}`: total sync attempts by `action` (`create|update|delete`) and `result` (`success|failure`)
+- `rsecrets_controller_sync_success_total{action}`: successful sync count by action
+- `rsecrets_controller_sync_failure_total{action}`: failed sync count by action
+- `rsecrets_controller_sync_duration_seconds{action,result}`: sync duration histogram in seconds by action/result
+
+Example PromQL:
+
+```promql
+# success rate over 5m
+sum(rate(rsecrets_controller_sync_success_total[5m]))
+/
+sum(rate(rsecrets_controller_sync_attempts_total[5m]))
+
+# failed sync rate over 5m
+sum(rate(rsecrets_controller_sync_failure_total[5m]))
+
+# total sync attempts rate over 5m
+sum(rate(rsecrets_controller_sync_attempts_total[5m]))
+
+# p95 sync duration over 5m
+histogram_quantile(
+  0.95,
+  sum(rate(rsecrets_controller_sync_duration_seconds_bucket[5m])) by (le, action, result)
+)
+```
