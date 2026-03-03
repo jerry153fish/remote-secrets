@@ -144,7 +144,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build image
+      - name: Build image (PR/no cache write)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          tags: controller:local
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
+          push: false
+          load: true
+
+      - name: Build image (push/cache write)
+        if: ${{ github.event_name != 'pull_request' }}
         uses: docker/build-push-action@v6
         id: build
         with:
