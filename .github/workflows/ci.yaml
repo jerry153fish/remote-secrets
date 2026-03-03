@@ -165,8 +165,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
-          cache-to: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64,mode=max
           push: false
           load: true
 
@@ -250,8 +248,6 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/remote-secrets:sha-${{ github.sha }}-amd64
           cache-from: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
-          cache-to: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64,mode=max
 
   docker-push-arm64:
     runs-on: ubuntu-24.04-arm
