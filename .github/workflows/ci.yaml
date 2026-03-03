@@ -147,7 +147,6 @@ jobs:
       - name: Build image (PR/no cache write)
         if: ${{ github.event_name == 'pull_request' }}
         uses: docker/build-push-action@v6
-        id: build
         with:
           context: .
           tags: controller:local
@@ -160,7 +159,6 @@ jobs:
       - name: Build image (push/cache write)
         if: ${{ github.event_name != 'pull_request' }}
         uses: docker/build-push-action@v6
-        id: build
         with:
           context: .
           tags: controller:local
