@@ -237,9 +237,9 @@ jobs:
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository_owner }}/remote-secrets:sha-${{ github.sha }}-amd64
           cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64-amd64
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
           cache-to: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64-amd64,mode=max
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64,mode=max
 
   docker-push-arm64:
     runs-on: ubuntu-24.04-arm
@@ -275,9 +275,9 @@ jobs:
           platforms: linux/arm64
           tags: ghcr.io/${{ github.repository_owner }}/remote-secrets:sha-${{ github.sha }}-arm64
           cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64-arm64
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-arm64
           cache-to: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64-arm64,mode=max
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-arm64,mode=max
 
   docker-push-manifest:
     runs-on: ubuntu-latest
