@@ -1045,7 +1045,7 @@ dependencies = [
 
 [[package]]
 name = "crd"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2068,7 +2068,7 @@ dependencies = [
 
 [[package]]
 name = "k8s"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "crd",
@@ -2573,7 +2573,7 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
 name = "plugins"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2848,7 +2848,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "remote-secrets"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -2864,6 +2864,7 @@ dependencies = [
  "log4rs",
  "plugins",
  "prometheus",
+ "rustls 0.23.37",
  "serde",
  "serde_json",
  "tokio",
@@ -3491,9 +3492,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.49.0"
+version = "1.50.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72a2903cd7736441aac9df9d7688bd0ce48edccaadf181c3b90be801e81d3d86"
+checksum = "27ad5e34374e03cfffefc301becb44e9dc3c17584f414349ebe29ed26661822d"
 dependencies = [
  "bytes",
  "libc",
@@ -3725,7 +3726,7 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
 name = "utils"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "crd",
