@@ -1045,7 +1045,7 @@ dependencies = [
 
 [[package]]
 name = "crd"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2068,7 +2068,7 @@ dependencies = [
 
 [[package]]
 name = "k8s"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "crd",
@@ -2088,9 +2088,9 @@ dependencies = [
 
 [[package]]
 name = "k8s-openapi"
-version = "0.27.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05a6d6f3611ad1d21732adbd7a2e921f598af6c92d71ae6e2620da4b67ee1f0d"
+checksum = "51b326f5219dd55872a72c1b6ddd1b830b8334996c667449c29391d657d78d5e"
 dependencies = [
  "base64",
  "jiff",
@@ -2573,7 +2573,7 @@ checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
 name = "plugins"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2848,7 +2848,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "remote-secrets"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -2864,6 +2864,7 @@ dependencies = [
  "log4rs",
  "plugins",
  "prometheus",
+ "rustls 0.23.37",
  "serde",
  "serde_json",
  "tokio",
@@ -3725,7 +3726,7 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
 name = "utils"
-version = "1.0.6"
+version = "1.0.7"
 dependencies = [
  "anyhow",
  "crd",
