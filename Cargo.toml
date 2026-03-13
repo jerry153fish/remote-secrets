@@ -22,7 +22,7 @@ version = "1.0.7"
 [workspace.dependencies]
 anyhow = "1.0"
 async-trait = "0.1.89"
-cached = { version = "0.56.0", features = ["proc_macro", "async"] }
+cached = { version = "0.58.0", features = ["proc_macro", "async"] }
 futures = "0.3"
 json_dotpath = "1.1.0"
 kube = { version = "3.0.1", features = ["runtime", "derive"] }
