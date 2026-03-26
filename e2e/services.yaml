@@ -8,7 +8,7 @@ services:
       VAULT_ADDR: "http://0.0.0.0:8200"
       VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:4.12
     ports:
       - 4566:4566
       - 4571:4571
