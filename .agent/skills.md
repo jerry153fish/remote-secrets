@@ -37,6 +37,12 @@
 - Keep unit-style tests runnable without mock services; skip integration tests explicitly when the required environment is absent.
 - If AWS SDK config code changes, keep all backends on the shared helper in `plugins/src/aws_common.rs` so behavior is consistent across SSM, Secrets Manager, and CloudFormation.
 
+## Skill: GitHub operations via gh
+- Use `gh` for GitHub-side actions such as PR creation, PR inspection, checks, comments, and issue lookups.
+- Use plain `git` for local branch/commit/stash operations; use `gh` once the work needs to touch GitHub.
+- Before assuming auth is broken, run `gh auth status` and report the actual account/scopes state.
+- For PRs, prefer concise titles/bodies and include the validation commands that were actually run.
+
 ## Notes
 - Some plugin tests require localstack/vault and env setup; run only after `make mock-env` + `make init-test`.
 - Keep docs in `README.md` in sync with metric names and labels.
