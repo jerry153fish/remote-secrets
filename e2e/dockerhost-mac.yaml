@@ -7,8 +7,15 @@ metadata:
   namespace: remote-secrets
 spec:
   externalName: host.docker.internal
-  selector:
-    app: dockerhost
+  ports:
+    - name: aws-mock
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: vault
+      protocol: TCP
+      port: 8200
+      targetPort: 8200
   type: ExternalName
 status:
   loadBalancer: {}

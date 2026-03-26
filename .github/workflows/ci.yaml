@@ -14,11 +14,12 @@ jobs:
     timeout-minutes: 60
 
     services:
-      localstack:
-        image: localstack/localstack:4.12
+      aws-mock:
+        image: wiremock/wiremock:3.13.1
         ports:
-          - 4566:4566
-          - 4571:4571
+          - 8080:8080
+        volumes:
+          - ${{ github.workspace }}/e2e/wiremock:/home/wiremock
 
       vault-server:
         image: vault:1.13.3
@@ -65,12 +66,9 @@ jobs:
             ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-target-
 
-      - id: install-aws-cli
-        uses: unfor19/install-aws-cli-action@master
-
-      - name: Wait for localstack
+      - name: Wait for AWS mock
         run: |
-          ./wait-for.sh http://localhost:4566/_localstack/health -t 300 -s -- echo 'localstack up'
+          ./wait-for.sh http://localhost:8080/__admin/ -t 300 -s -- echo 'aws mock up'
           make init-test && sleep 2
 
       - name: Run unit tests
@@ -87,13 +85,12 @@ jobs:
     timeout-minutes: 60
 
     services:
-      localstack:
-        image: localstack/localstack:4.12
+      aws-mock:
+        image: wiremock/wiremock:3.13.1
         ports:
-          - 4566:4566
-          - 4571:4571
-        env:
-          DEBUG: 1
+          - 8080:8080
+        volumes:
+          - ${{ github.workspace }}/e2e/wiremock:/home/wiremock
 
       vault-server:
         image: vault:1.13.3
@@ -180,12 +177,9 @@ jobs:
         with:
           sarif_file: "trivy-results.sarif"
 
-      - id: install-aws-cli
-        uses: unfor19/install-aws-cli-action@master
-
       - name: Setup remote secrets in kind
         run: |
-          ./wait-for.sh http://localhost:4566/_localstack/health -t 300 -s -- echo 'localstack up'
+          ./wait-for.sh http://localhost:8080/__admin/ -t 300 -s -- echo 'aws mock up'
           make init-test
           make kind-image-load
           make install-local
@@ -193,7 +187,7 @@ jobs:
 
           kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=180s
 
-          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:4566/_localstack/health'
+          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:8080/__admin/'
 
       - name: Sanity check remote secrets
         run: |
@@ -207,11 +201,10 @@ jobs:
           kubectl get secret test-rsecret -o yaml || true
           kubectl -n remote-secrets get deploy remote-secrets -o yaml || true
           kubectl -n remote-secrets logs deploy/remote-secrets || true
-          docker logs "${{ job.services.localstack.id }}" || true
+          docker logs "${{ job.services.aws-mock.id }}" || true
           kubectl get rsecrets.jerry153fish.com test-rsecret -o yaml || true
-          aws ssm get-parameters --endpoint-url http://localhost:4566 --names MyStringParameter MyJsonParameter | cat -
-          aws secretsmanager list-secrets --endpoint-url http://localhost:4566 | cat -
-          aws cloudformation describe-stacks --stack-name MyTestStack --endpoint-url http://localhost:4566 | cat -
+          curl -s http://localhost:8080/__admin/mappings | cat -
+          curl -s http://localhost:8080/__admin/requests | cat -
 
   docker-push-amd64:
     runs-on: ubuntu-latest

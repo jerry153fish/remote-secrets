@@ -80,7 +80,7 @@ stringData:
 #  AWS_ACCESS_KEY_ID: "aaa"
 #  AWS_SECRET_ACCESS_KEY: "secret"
 #  AWS_REGION: "ap-southeast-2"
-#  LOCALSTACK_URL: "http://dockerhost:4572"
+#  AWS_ENDPOINT_URL: "http://dockerhost:8080"
 #  TEST_ENV: "true"
 ```
 
@@ -175,11 +175,13 @@ make mock-env
 make kind-cluster
 ```
 
-3. initialize test data
+3. initialize dynamic test data
 
 ```
 make init-test
 ```
+
+`make mock-env` starts Vault plus a WireMock container that serves static AWS SDK responses for SSM, Secrets Manager, and CloudFormation. `make init-test` only seeds Vault because the AWS mock data is checked into [`e2e/wiremock`](./e2e/wiremock).
 
 4. run test
 

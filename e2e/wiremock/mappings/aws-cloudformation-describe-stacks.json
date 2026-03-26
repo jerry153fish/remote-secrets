@@ -1,0 +1,25 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/",
+    "bodyPatterns": [
+      {
+        "contains": "Action=DescribeStacks"
+      },
+      {
+        "contains": "StackName=MyTestStack"
+      },
+      {
+        "contains": "Version=2010-05-15"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/xml; charset=utf-8"
+    },
+    "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<DescribeStacksResponse xmlns=\"http://cloudformation.amazonaws.com/doc/2010-05-15/\">\n  <DescribeStacksResult>\n    <Stacks>\n      <member>\n        <StackName>MyTestStack</StackName>\n        <Outputs>\n          <member>\n            <OutputKey>S3Bucket</OutputKey>\n            <OutputValue>S3Bucket</OutputValue>\n          </member>\n          <member>\n            <OutputKey>S3TestPoint</OutputKey>\n            <OutputValue>TestPoint</OutputValue>\n          </member>\n        </Outputs>\n      </member>\n    </Stacks>\n  </DescribeStacksResult>\n  <ResponseMetadata>\n    <RequestId>00000000-0000-0000-0000-000000000000</RequestId>\n  </ResponseMetadata>\n</DescribeStacksResponse>\n"
+  }
+}

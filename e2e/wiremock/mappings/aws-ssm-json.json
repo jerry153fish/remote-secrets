@@ -1,0 +1,34 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/",
+    "headers": {
+      "x-amz-target": {
+        "equalTo": "AmazonSSM.GetParameter"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.Name == 'MyJsonParameter')]"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/x-amz-json-1.1"
+    },
+    "jsonBody": {
+      "Parameter": {
+        "ARN": "arn:aws:ssm:ap-southeast-2:000000000000:parameter/MyJsonParameter",
+        "DataType": "text",
+        "LastModifiedDate": 0,
+        "Name": "MyJsonParameter",
+        "Type": "String",
+        "Value": "{ \"ssmName\": \"test\", \"objectName\": \"objectName\"}",
+        "Version": 1
+      }
+    }
+  }
+}

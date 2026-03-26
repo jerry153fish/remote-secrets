@@ -7,6 +7,15 @@ metadata:
   namespace: remote-secrets
 spec:
   clusterIP: None
+  ports:
+    - name: aws-mock
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: vault
+      protocol: TCP
+      port: 8200
+      targetPort: 8200
 ---
 apiVersion: discovery.k8s.io/v1
 kind: EndpointSlice
@@ -20,6 +29,9 @@ endpoints:
   - addresses:
       - 172.17.0.1
 ports:
-  - name: http
+  - name: aws-mock
     protocol: TCP
-    port: 4566
+    port: 8080
+  - name: vault
+    protocol: TCP
+    port: 8200
