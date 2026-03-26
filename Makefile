@@ -74,13 +74,11 @@ check: fmt clippy test-unit ## run local CI checks without external services
 
 init-test: ## init the test environment
 	mkdir debug || true
-	aws ssm put-parameter --endpoint-url http://localhost:4566 --name MyStringParameter --type "String" --value "Vici" --overwrite > /dev/null || true
-	aws ssm put-parameter --endpoint-url http://localhost:4566 --name MyJsonParameter --type "String" --value '{ "ssmName": "test", "objectName": "objectName"}' --overwrite > /dev/null || true
-	aws ssm get-parameters --endpoint-url http://localhost:4566 --names MyStringParameter MyJsonParameter > debug/ssm-list.json || true
-	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyTestSecret --secret-string "Vicd" > /dev/null || true
-	aws secretsmanager create-secret --endpoint-url http://localhost:4566 --name MyJsonSecret --secret-string '{ "srmName": "test", "srmTest": "objectName"}' > /dev/null || true
-	aws secretsmanager list-secrets --endpoint-url http://localhost:4566 > debug/secets-manager-list.json || true
-	aws cloudformation create-stack --endpoint-url http://localhost:4566 --stack-name MyTestStack --template-body file://e2e/mock-cfn.yaml > debug/create-stack-result.json || true
+	./wait-for.sh http://localhost:8080/__admin/mappings -t 60 -s -- echo 'wiremock up'
+	curl -s http://localhost:8080/__admin/mappings > debug/wiremock-mappings.json
+	curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: AmazonSSM.GetParameter' -d '{"Name":"MyStringParameter"}' > debug/ssm-get-parameter.json
+	curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: secretsmanager.GetSecretValue' -d '{"SecretId":"MyTestSecret"}' > debug/secretsmanager-get-secret.json
+	curl -s -X POST http://localhost:8080/ -H 'Content-Type: text/xml' -d 'Action=DescribeStacks&StackName=MyTestStack&Version=2010-05-15' > debug/cloudformation-describe-stacks.xml
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"vaultString"}}' http://127.0.0.1:8200/v1/secret/data/vaultString || true
 	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"vaultJson1": "vaultJson1", "vaultJson2": "vaultJson2"}}}' http://127.0.0.1:8200/v1/secret/data/vaultJson || true
 

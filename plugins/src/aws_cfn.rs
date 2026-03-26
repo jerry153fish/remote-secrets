@@ -1,4 +1,4 @@
-use crate::aws_common::{get_aws_sdk_config, is_test_env, localstack_endpoint};
+use crate::aws_common::{aws_endpoint_url, get_aws_sdk_config, is_test_env};
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use crd::{Backend, RemoteValue, SecretData};
@@ -76,11 +76,11 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
     let mut cloudformation_config_builder = aws_sdk_cloudformation::config::Builder::from(conf);
     if is_test_env() {
         log::info!(
-            "Using localstack for CloudFormation: {}",
-            localstack_endpoint()
+            "Using mock AWS endpoint for CloudFormation: {}",
+            aws_endpoint_url()
         );
         cloudformation_config_builder =
-            cloudformation_config_builder.endpoint_url(localstack_endpoint())
+            cloudformation_config_builder.endpoint_url(aws_endpoint_url())
     }
     aws_sdk_cloudformation::Client::from_conf(cloudformation_config_builder.build())
 }

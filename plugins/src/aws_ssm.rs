@@ -1,4 +1,4 @@
-use crate::aws_common::{get_aws_sdk_config, is_test_env, localstack_endpoint};
+use crate::aws_common::{aws_endpoint_url, get_aws_sdk_config, is_test_env};
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use crd::{Backend, RemoteValue, SecretData};
@@ -51,8 +51,8 @@ impl RemoteValue for SSM {
 pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
     let mut ssm_config_builder = aws_sdk_ssm::config::Builder::from(conf);
     if is_test_env() {
-        log::info!("Using localstack for ssm {}", localstack_endpoint());
-        ssm_config_builder = ssm_config_builder.endpoint_url(localstack_endpoint())
+        log::info!("Using mock AWS endpoint for ssm {}", aws_endpoint_url());
+        ssm_config_builder = ssm_config_builder.endpoint_url(aws_endpoint_url())
     }
     aws_sdk_ssm::Client::from_conf(ssm_config_builder.build())
 }

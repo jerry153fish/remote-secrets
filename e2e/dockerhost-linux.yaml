@@ -22,4 +22,4 @@ endpoints:
 ports:
   - name: http
     protocol: TCP
-    port: 4566
+    port: 8080

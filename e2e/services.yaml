@@ -7,8 +7,9 @@ services:
     environment:
       VAULT_ADDR: "http://0.0.0.0:8200"
       VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
-  localstack:
-    image: localstack/localstack:4.12
+  wiremock:
+    image: wiremock/wiremock:3.13.1
     ports:
-      - 4566:4566
-      - 4571:4571
+      - 8080:8080
+    volumes:
+      - ./wiremock:/home/wiremock
