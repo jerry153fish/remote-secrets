@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use std::collections::BTreeMap;
-use std::time::Duration;
 
 use cached::proc_macro::cached;
 use k8s_openapi::ByteString;
