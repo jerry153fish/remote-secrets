@@ -1,0 +1,29 @@
+<DescribeStacksResponse xmlns="http://cloudformation.amazonaws.com/doc/2010-05-15/">
+  <DescribeStacksResult>
+    <Stacks>
+      <member>
+        <StackId>arn:aws:cloudformation:ap-southeast-2:000000000000:stack/MyTestStack/mock-stack-id</StackId>
+        <StackName>MyTestStack</StackName>
+        <CreationTime>2024-01-01T00:00:00.000Z</CreationTime>
+        <StackStatus>CREATE_COMPLETE</StackStatus>
+        <Outputs>
+          <member>
+            <Description>S3 bucket name</Description>
+            <ExportName>MyTestStack-S3Bucket</ExportName>
+            <OutputKey>S3Bucket</OutputKey>
+            <OutputValue>S3Bucket</OutputValue>
+          </member>
+          <member>
+            <Description>S3 test point</Description>
+            <ExportName>MyTestStack-S3TestPoint</ExportName>
+            <OutputKey>S3TestPoint</OutputKey>
+            <OutputValue>TestPoint</OutputValue>
+          </member>
+        </Outputs>
+      </member>
+    </Stacks>
+  </DescribeStacksResult>
+  <ResponseMetadata>
+    <RequestId>00000000-0000-0000-0000-000000000003</RequestId>
+  </ResponseMetadata>
+</DescribeStacksResponse>

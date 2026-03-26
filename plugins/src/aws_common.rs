@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-/// if using localstack as aws backend
+/// if using the local AWS mock backend
 pub fn is_test_env() -> bool {
     std::env::var("TEST_ENV").unwrap_or_default() == "true"
 }
@@ -10,10 +10,10 @@ pub fn should_run_aws_integration_tests() -> bool {
     is_test_env()
 }
 
-/// get the localstack endpoint
-pub fn localstack_endpoint() -> &'static str {
-    let local_endpoint = "http://localhost:4566/".to_string();
-    let url = std::env::var("LOCALSTACK_URL").unwrap_or(local_endpoint);
+/// Get the mock AWS endpoint used in integration tests.
+pub fn aws_endpoint_url() -> &'static str {
+    let default_endpoint = "http://localhost:8080/".to_string();
+    let url = std::env::var("AWS_ENDPOINT_URL").unwrap_or(default_endpoint);
     Box::leak(url.into_boxed_str())
 }
 

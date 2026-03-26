@@ -1,4 +1,4 @@
-use crate::aws_common::{get_aws_sdk_config, is_test_env, localstack_endpoint};
+use crate::aws_common::{aws_endpoint_url, get_aws_sdk_config, is_test_env};
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use crd::{Backend, RemoteValue, SecretData};
@@ -52,11 +52,11 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
     let mut secretsmanager_config_builder = aws_sdk_secretsmanager::config::Builder::from(conf);
     if is_test_env() {
         log::info!(
-            "Using localstack for SecretsManager {}",
-            localstack_endpoint()
+            "Using mock AWS endpoint for SecretsManager {}",
+            aws_endpoint_url()
         );
         secretsmanager_config_builder =
-            secretsmanager_config_builder.endpoint_url(localstack_endpoint())
+            secretsmanager_config_builder.endpoint_url(aws_endpoint_url())
     }
     aws_sdk_secretsmanager::Client::from_conf(secretsmanager_config_builder.build())
 }

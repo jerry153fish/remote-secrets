@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/",
+    "bodyPatterns": [
+      {
+        "contains": "Action=DescribeStacks"
+      },
+      {
+        "contains": "StackName=MyTestStack"
+      },
+      {
+        "contains": "Version=2010-05-15"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/xml; charset=utf-8"
+    },
+    "bodyFileName": "cloudformation-describe-stacks.xml"
+  }
+}

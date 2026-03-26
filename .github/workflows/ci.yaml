@@ -13,21 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
-    services:
-      localstack:
-        image: localstack/localstack:4.12
-        ports:
-          - 4566:4566
-          - 4571:4571
-
-      vault-server:
-        image: vault:1.13.3
-        ports:
-          - "8200:8200"
-        env:
-          VAULT_ADDR: "http://0.0.0.0:8200"
-          VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
-
     env:
       AWS_REGION: ap-southeast-2
       AWS_ACCESS_KEY_ID: foobar
@@ -65,12 +50,12 @@ jobs:
             ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
             ${{ runner.os }}-target-
 
-      - id: install-aws-cli
-        uses: unfor19/install-aws-cli-action@master
+      - name: Start mock services
+        run: docker compose -f e2e/services.yaml up -d
 
-      - name: Wait for localstack
+      - name: Wait for WireMock
         run: |
-          ./wait-for.sh http://localhost:4566/_localstack/health -t 300 -s -- echo 'localstack up'
+          ./wait-for.sh http://localhost:8080/__admin/mappings -t 300 -s -- echo 'wiremock up'
           make init-test && sleep 2
 
       - name: Run unit tests
@@ -85,23 +70,6 @@ jobs:
       security-events: write
       actions: read
     timeout-minutes: 60
-
-    services:
-      localstack:
-        image: localstack/localstack:4.12
-        ports:
-          - 4566:4566
-          - 4571:4571
-        env:
-          DEBUG: 1
-
-      vault-server:
-        image: vault:1.13.3
-        ports:
-          - "8200:8200"
-        env:
-          VAULT_ADDR: "http://0.0.0.0:8200"
-          VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
 
     env:
       AWS_REGION: ap-southeast-2
@@ -118,6 +86,9 @@ jobs:
         with:
           toolchain: 1.93.1
           components: clippy, rustfmt
+
+      - name: Start mock services
+        run: docker compose -f e2e/services.yaml up -d
 
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.14.0
@@ -180,12 +151,9 @@ jobs:
         with:
           sarif_file: "trivy-results.sarif"
 
-      - id: install-aws-cli
-        uses: unfor19/install-aws-cli-action@master
-
       - name: Setup remote secrets in kind
         run: |
-          ./wait-for.sh http://localhost:4566/_localstack/health -t 300 -s -- echo 'localstack up'
+          ./wait-for.sh http://localhost:8080/__admin/mappings -t 300 -s -- echo 'wiremock up'
           make init-test
           make kind-image-load
           make install-local
@@ -193,7 +161,7 @@ jobs:
 
           kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=180s
 
-          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:4566/_localstack/health'
+          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:8080/__admin/mappings'
 
       - name: Sanity check remote secrets
         run: |
@@ -207,11 +175,12 @@ jobs:
           kubectl get secret test-rsecret -o yaml || true
           kubectl -n remote-secrets get deploy remote-secrets -o yaml || true
           kubectl -n remote-secrets logs deploy/remote-secrets || true
-          docker logs "${{ job.services.localstack.id }}" || true
+          docker compose -f e2e/services.yaml logs || true
           kubectl get rsecrets.jerry153fish.com test-rsecret -o yaml || true
-          aws ssm get-parameters --endpoint-url http://localhost:4566 --names MyStringParameter MyJsonParameter | cat -
-          aws secretsmanager list-secrets --endpoint-url http://localhost:4566 | cat -
-          aws cloudformation describe-stacks --stack-name MyTestStack --endpoint-url http://localhost:4566 | cat -
+          curl -s http://localhost:8080/__admin/mappings | cat -
+          curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: AmazonSSM.GetParameter' -d '{"Name":"MyStringParameter"}' | cat -
+          curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: secretsmanager.GetSecretValue' -d '{"SecretId":"MyTestSecret"}' | cat -
+          curl -s -X POST http://localhost:8080/ -H 'Content-Type: text/xml' -d 'Action=DescribeStacks&StackName=MyTestStack&Version=2010-05-15' | cat -
 
   docker-push-amd64:
     runs-on: ubuntu-latest

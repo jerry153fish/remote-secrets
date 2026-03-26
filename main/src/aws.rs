@@ -6,14 +6,14 @@
 
 // use anyhow::{anyhow, Result};
 
-// /// if using localstack as aws backend
+// /// if using the local AWS mock backend
 // pub fn is_test_env() -> bool {
 //     std::env::var("TEST_ENV").unwrap_or_default() == "true"
 // }
 
-// /// get the localstack endpoint
-// pub fn localstack_endpoint() -> Endpoint {
-//     let url = std::env::var("LOCALSTACK_URL").unwrap_or("http://localhost:4566/".to_string());
+// /// get the mock AWS endpoint
+// pub fn aws_endpoint_url() -> Endpoint {
+//     let url = std::env::var("AWS_ENDPOINT_URL").unwrap_or("http://localhost:8080/".to_string());
 //     Endpoint::immutable(Uri::from_str(&url).unwrap())
 // }
 

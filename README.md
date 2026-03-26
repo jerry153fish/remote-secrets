@@ -80,7 +80,7 @@ stringData:
 #  AWS_ACCESS_KEY_ID: "aaa"
 #  AWS_SECRET_ACCESS_KEY: "secret"
 #  AWS_REGION: "ap-southeast-2"
-#  LOCALSTACK_URL: "http://dockerhost:4572"
+#  AWS_ENDPOINT_URL: "http://dockerhost:8080"
 #  TEST_ENV: "true"
 ```
 
@@ -169,6 +169,8 @@ make help
 make mock-env
 ```
 
+This starts Vault plus a WireMock-backed AWS fixture server on `http://localhost:8080`.
+
 3. create a local k8s cluster using kind
 
 ```
@@ -180,6 +182,8 @@ make kind-cluster
 ```
 make init-test
 ```
+
+`make init-test` verifies the WireMock AWS fixtures are reachable and seeds the Vault data used by the tests.
 
 4. run test
 
