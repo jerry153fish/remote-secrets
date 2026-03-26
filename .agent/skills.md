@@ -27,6 +27,16 @@
    - `make init-test`
    - `make test`
 
+## Skill: dependency refresh and mock-backed plugin validation
+- Use `cargo upgrade` if it is installed locally; otherwise use `cargo update` and only change manifests manually when compatibility requires it.
+- Treat crates.io or git network failures as a hard blocker for dependency refresh and report the exact failing command.
+- AWS plugin tests are integration tests backed by LocalStack. They should only run when `TEST_ENV=true`, ideally after:
+  - `make mock-env`
+  - `make init-test`
+  - `make test`
+- Keep unit-style tests runnable without mock services; skip integration tests explicitly when the required environment is absent.
+- If AWS SDK config code changes, keep all backends on the shared helper in `plugins/src/aws_common.rs` so behavior is consistent across SSM, Secrets Manager, and CloudFormation.
+
 ## Notes
 - Some plugin tests require localstack/vault and env setup; run only after `make mock-env` + `make init-test`.
 - Keep docs in `README.md` in sync with metric names and labels.

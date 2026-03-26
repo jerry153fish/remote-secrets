@@ -5,6 +5,11 @@ pub fn is_test_env() -> bool {
     std::env::var("TEST_ENV").unwrap_or_default() == "true"
 }
 
+/// AWS integration tests require the local mock environment described in the repo docs.
+pub fn should_run_aws_integration_tests() -> bool {
+    is_test_env()
+}
+
 /// get the localstack endpoint
 pub fn localstack_endpoint() -> &'static str {
     let local_endpoint = "http://localhost:4566/".to_string();

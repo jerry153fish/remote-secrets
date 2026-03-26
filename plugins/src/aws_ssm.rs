@@ -77,8 +77,21 @@ mod tests {
     use super::*;
     use serde_json;
 
+    fn skip_without_mock_env() -> bool {
+        if crate::aws_common::should_run_aws_integration_tests() {
+            return false;
+        }
+
+        eprintln!("Skipping AWS integration test: TEST_ENV=true is required");
+        true
+    }
+
     #[tokio::test]
     async fn test_get_ssm_parameter() {
+        if skip_without_mock_env() {
+            return;
+        }
+
         let result = get_ssm_parameter("MyStringParameter".to_string())
             .await
             .unwrap();
@@ -87,6 +100,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_ssm() {
+        if skip_without_mock_env() {
+            return;
+        }
+
         let backend_str = r#"
         {
             "backend": "SSM",
