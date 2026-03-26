@@ -1,4 +1,4 @@
-use crate::aws_common::{is_test_env, localstack_endpoint};
+use crate::aws_common::{get_aws_sdk_config, is_test_env, localstack_endpoint};
 use async_trait::async_trait;
 use cached::proc_macro::cached;
 use crd::{Backend, RemoteValue, SecretData};
@@ -91,7 +91,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
 pub async fn get_cloudformation_outputs(
     stack_name: String,
 ) -> Result<Vec<aws_sdk_cloudformation::types::Output>> {
-    let shared_config = aws_config::from_env().load().await;
+    let shared_config = get_aws_sdk_config().await?;
     let client = cloudformation_client(&shared_config);
     let resp = client
         .describe_stacks()
@@ -147,8 +147,21 @@ mod tests {
     use super::*;
     use serde_json;
 
+    fn skip_without_mock_env() -> bool {
+        if crate::aws_common::should_run_aws_integration_tests() {
+            return false;
+        }
+
+        eprintln!("Skipping AWS integration test: TEST_ENV=true is required");
+        true
+    }
+
     #[tokio::test]
     async fn test_get_cloudformation_stack() {
+        if skip_without_mock_env() {
+            return;
+        }
+
         let result = get_cloudformation_output("MyTestStack".to_string(), "S3Bucket".to_string())
             .await
             .unwrap();
@@ -158,6 +171,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_cloudformation_outputs() {
+        if skip_without_mock_env() {
+            return;
+        }
+
         let result = get_cloudformation_outputs_as_secret_data("MyTestStack".to_string())
             .await
             .unwrap();
@@ -169,6 +186,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_cloudformation() {
+        if skip_without_mock_env() {
+            return;
+        }
+
         let backend_str = r#"
         {
             "backend": "Cloudformation",
