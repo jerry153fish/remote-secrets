@@ -10,6 +10,9 @@
     "bodyPatterns": [
       {
         "contains": "\"Name\":\"MyJsonParameter\""
+      },
+      {
+        "contains": "\"WithDecryption\":true"
       }
     ]
   },

@@ -62,7 +62,12 @@ pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
 pub async fn get_ssm_parameter(name: String) -> Result<String> {
     let shared_config = get_aws_sdk_config().await?;
     let client = ssm_client(&shared_config);
-    let parmeter = client.get_parameter().name(name).send().await?;
+    let parmeter = client
+        .get_parameter()
+        .name(name)
+        .with_decryption(true)
+        .send()
+        .await?;
     let result = parmeter
         .parameter()
         .ok_or_else(|| anyhow!("no parameter found"))?
