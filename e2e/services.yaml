@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   vault-server:
     image: vault:1.13.3

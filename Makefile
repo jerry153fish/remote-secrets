@@ -83,6 +83,7 @@ check: fmt clippy test-unit ## run local CI checks without external services
 init-test: ## init the test environment
 	mkdir debug || true
 	./wait-for.sh $(FLOCI_READY_URL) -t 60 -s -- echo 'floci ready'
+	until curl -fsS $(FLOCI_READY_URL) | grep -q '"ready":true'; do sleep 1; done
 	$(DOCKER_COMPOSE) exec -T floci aws ssm get-parameter --name MyStringParameter > debug/ssm-get-parameter.json
 	$(DOCKER_COMPOSE) exec -T floci aws secretsmanager get-secret-value --secret-id MyTestSecret > debug/secretsmanager-get-secret.json
 	$(DOCKER_COMPOSE) exec -T floci aws cloudformation describe-stacks --stack-name MyTestStack > debug/cloudformation-describe-stacks.json
