@@ -13,7 +13,7 @@ anyhow.workspace = true
 async-trait.workspace = true
 aws-config = "=1.8.15"
 aws-sdk-appconfig = "=1.102.0"
-aws-sdk-cloudformation = "=1.108.0"
+aws-sdk-cloudformation = "=1.110.0"
 aws-sdk-secretsmanager = "=1.101.0"
 aws-sdk-ssm = "=1.108.0"
 aws-smithy-http = "=0.63.6"
