@@ -52,7 +52,7 @@ pub fn secretsmanager_client(conf: &aws_types::SdkConfig) -> aws_sdk_secretsmana
     let mut secretsmanager_config_builder = aws_sdk_secretsmanager::config::Builder::from(conf);
     if is_test_env() {
         log::info!(
-            "Using mock AWS endpoint for SecretsManager {}",
+            "Using local AWS endpoint for SecretsManager {}",
             aws_endpoint_url()
         );
         secretsmanager_config_builder =

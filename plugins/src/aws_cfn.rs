@@ -76,7 +76,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
     let mut cloudformation_config_builder = aws_sdk_cloudformation::config::Builder::from(conf);
     if is_test_env() {
         log::info!(
-            "Using mock AWS endpoint for CloudFormation: {}",
+            "Using local AWS endpoint for CloudFormation: {}",
             aws_endpoint_url()
         );
         cloudformation_config_builder =

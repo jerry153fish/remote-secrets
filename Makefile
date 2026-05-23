@@ -18,6 +18,14 @@ BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:local
+DOCKER_COMPOSE ?= docker compose -f e2e/services.yaml
+AWS_REGION ?= ap-southeast-2
+AWS_ACCESS_KEY_ID ?= test
+AWS_SECRET_ACCESS_KEY ?= test
+AWS_ENDPOINT_URL ?= http://localhost:4566
+FLOCI_READY_URL ?= $(AWS_ENDPOINT_URL)/_floci/init
+VAULT_ADDR ?= http://127.0.0.1:8200
+VAULT_TOKEN ?= vault-plaintext-root-token
 
 
 # Setting SHELL to bash allows bash commands to be executed by recipes.
@@ -61,8 +69,8 @@ manifest-local-clean: ## Clean the manifest file for local testing.
 crdgen: ## Generate CRDs
 	cargo run --bin crd > config/crd.yaml
 
-test: ## run integration-style tests (requires mock services initialized)
-	export TEST_ENV=true && cargo test --workspace --all-features --all-targets -- --nocapture
+test: ## run integration-style tests (requires local services initialized)
+	TEST_ENV=true AWS_REGION=$(AWS_REGION) AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) AWS_ENDPOINT_URL=$(AWS_ENDPOINT_URL) VAULT_ADDR=$(VAULT_ADDR) VAULT_TOKEN=$(VAULT_TOKEN) cargo test --workspace --all-features --all-targets -- --nocapture
 
 test-unit: ## run fast unit tests only
 	cargo test -p utils --all-features
@@ -74,16 +82,17 @@ check: fmt clippy test-unit ## run local CI checks without external services
 
 init-test: ## init the test environment
 	mkdir debug || true
-	./wait-for.sh http://localhost:8080/__admin/mappings -t 60 -s -- echo 'wiremock up'
-	curl -s http://localhost:8080/__admin/mappings > debug/wiremock-mappings.json
-	curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: AmazonSSM.GetParameter' -d '{"Name":"MyStringParameter"}' > debug/ssm-get-parameter.json
-	curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: secretsmanager.GetSecretValue' -d '{"SecretId":"MyTestSecret"}' > debug/secretsmanager-get-secret.json
-	curl -s -X POST http://localhost:8080/ -H 'Content-Type: text/xml' -d 'Action=DescribeStacks&StackName=MyTestStack&Version=2010-05-15' > debug/cloudformation-describe-stacks.xml
-	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"vaultString"}}' http://127.0.0.1:8200/v1/secret/data/vaultString || true
-	curl -H "X-Vault-Token: vault-plaintext-root-token" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"vaultJson1": "vaultJson1", "vaultJson2": "vaultJson2"}}}' http://127.0.0.1:8200/v1/secret/data/vaultJson || true
+	./wait-for.sh $(FLOCI_READY_URL) -t 60 -s -- echo 'floci ready'
+	$(DOCKER_COMPOSE) exec -T floci aws ssm get-parameter --name MyStringParameter > debug/ssm-get-parameter.json
+	$(DOCKER_COMPOSE) exec -T floci aws secretsmanager get-secret-value --secret-id MyTestSecret > debug/secretsmanager-get-secret.json
+	$(DOCKER_COMPOSE) exec -T floci aws cloudformation describe-stacks --stack-name MyTestStack > debug/cloudformation-describe-stacks.json
+	curl -H "X-Vault-Token: $(VAULT_TOKEN)" -H "Content-Type: application/json" -X POST -d '{"data":{"value":"vaultString"}}' $(VAULT_ADDR)/v1/secret/data/vaultString || true
+	curl -H "X-Vault-Token: $(VAULT_TOKEN)" -H "Content-Type: application/json" -X POST -d '{"data":{"value":{"vaultJson1": "vaultJson1", "vaultJson2": "vaultJson2"}}}' $(VAULT_ADDR)/v1/secret/data/vaultJson || true
 
-mock-env: ## intialize the test environment locally
-	docker compose -f e2e/services.yaml up -d
+local-env: ## initialize the local test environment
+	$(DOCKER_COMPOSE) up -d --remove-orphans
+
+mock-env: local-env ## backwards-compatible alias for local-env
 
 kind-cluster: ## create a kind cluster
 	kind create cluster --name local || true

@@ -7,9 +7,15 @@ services:
     environment:
       VAULT_ADDR: "http://0.0.0.0:8200"
       VAULT_DEV_ROOT_TOKEN_ID: "vault-plaintext-root-token"
-  wiremock:
-    image: wiremock/wiremock:3.13.1
+  floci:
+    image: floci/floci:latest-compat
     ports:
-      - 8080:8080
+      - "4566:4566"
+    environment:
+      AWS_DEFAULT_REGION: ap-southeast-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      FLOCI_INIT_HOOKS_TIMEOUT_SECONDS: "120"
     volumes:
-      - ./wiremock:/home/wiremock
+      - ./floci/ready.d:/etc/floci/init/ready.d:ro
+      - ./mock-cfn.yaml:/etc/floci/templates/mock-cfn.yaml:ro

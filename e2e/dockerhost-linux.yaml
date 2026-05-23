@@ -20,6 +20,9 @@ endpoints:
   - addresses:
       - 172.17.0.1
 ports:
-  - name: http
+  - name: floci
     protocol: TCP
-    port: 8080
+    port: 4566
+  - name: vault
+    protocol: TCP
+    port: 8200
