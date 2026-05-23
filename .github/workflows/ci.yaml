@@ -140,7 +140,11 @@ jobs:
 
           kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=180s
 
-          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:4566/_floci/init'
+          kubectl -n remote-secrets delete pod/floci-check --ignore-not-found=true
+          kubectl -n remote-secrets run floci-check --image=curlimages/curl:8.11.1 --restart=Never --command -- curl -fsS http://dockerhost:4566/_floci/init
+          kubectl -n remote-secrets wait pod/floci-check --for=jsonpath='{.status.phase}'=Succeeded --timeout=60s
+          kubectl -n remote-secrets logs pod/floci-check
+          kubectl -n remote-secrets delete pod/floci-check --ignore-not-found=true
 
       - name: Sanity check remote secrets
         run: |
