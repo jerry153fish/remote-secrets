@@ -2,7 +2,7 @@ use crate::aws_common::is_test_env;
 use async_trait::async_trait;
 use std::collections::BTreeMap;
 
-use cached::proc_macro::cached;
+use cached::macros::cached;
 use k8s_openapi::ByteString;
 
 use crd::{Backend, RemoteValue, SecretData};
@@ -49,7 +49,7 @@ impl RemoteValue for Vault {
     }
 }
 
-#[cached(time = 60, result = true)]
+#[cached(ttl = 60, result = true)]
 pub async fn get_vault_value(path: String) -> Result<String> {
     let client = get_vault_client(path.clone())?;
     let response: serde_json::Value = client.send().await?.json().await?;

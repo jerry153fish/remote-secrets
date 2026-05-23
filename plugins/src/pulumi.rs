@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use std::collections::BTreeMap;
 
-use cached::proc_macro::cached;
+use cached::macros::cached;
 use k8s_openapi::ByteString;
 
 use crd::{Backend, RemoteValue, SecretData};
@@ -79,7 +79,7 @@ impl RemoteValue for Pulumi {
     }
 }
 
-#[cached(time = 60, result = true)]
+#[cached(ttl = 60, result = true)]
 pub async fn get_pulumi_outputs(
     path: String,
     pulumi_token: Option<String>,

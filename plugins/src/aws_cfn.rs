@@ -1,6 +1,6 @@
 use crate::aws_common::{aws_endpoint_url, get_aws_sdk_config, is_test_env};
 use async_trait::async_trait;
-use cached::proc_macro::cached;
+use cached::macros::cached;
 use crd::{Backend, RemoteValue, SecretData};
 
 use anyhow::{anyhow, Result};
@@ -86,7 +86,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
 
 /// get the data from the secret manager store by name
 /// Will cache the result for 60s
-#[cached(time = 60, result = true)]
+#[cached(ttl = 60, result = true)]
 pub async fn get_cloudformation_outputs(
     stack_name: String,
 ) -> Result<Vec<aws_sdk_cloudformation::types::Output>> {

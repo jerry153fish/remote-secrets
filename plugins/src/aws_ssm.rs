@@ -1,6 +1,6 @@
 use crate::aws_common::{aws_endpoint_url, get_aws_sdk_config, is_test_env};
 use async_trait::async_trait;
-use cached::proc_macro::cached;
+use cached::macros::cached;
 use crd::{Backend, RemoteValue, SecretData};
 
 use anyhow::{anyhow, Result};
@@ -58,7 +58,7 @@ pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
 
 /// get the data from the ssm parameter store by name
 /// Will cache the result for 60s
-#[cached(time = 60, result = true)]
+#[cached(ttl = 60, result = true)]
 pub async fn get_ssm_parameter(name: String) -> Result<String> {
     let shared_config = get_aws_sdk_config().await?;
     let client = ssm_client(&shared_config);
