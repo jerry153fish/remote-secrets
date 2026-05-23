@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
+      packages: write
       security-events: write
       actions: read
     timeout-minutes: 60
@@ -103,8 +103,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build image (PR/no cache write)
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Build image
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -114,22 +113,7 @@ jobs:
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
             type=gha,scope=remote-secrets-amd64
           cache-to: |
-            type=gha,scope=remote-secrets-amd64,mode=max,ignore-error=true
-          push: false
-          load: true
-
-      - name: Build image (push/cache write)
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          tags: controller:local
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
-            type=gha,scope=remote-secrets-amd64
-          cache-to: |
-            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64,mode=max
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64,mode=max,ignore-error=true
             type=gha,scope=remote-secrets-amd64,mode=max,ignore-error=true
           push: false
           load: true
