@@ -6,6 +6,8 @@ jobs:
   cache:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      CARGO_INCREMENTAL: "0"
 
     steps:
       - name: Check out repository code
@@ -16,33 +18,12 @@ jobs:
           toolchain: 1.93.1
           components: clippy, rustfmt
 
-      - name: ⚡ Cache Cargo
-        uses: actions/cache@v5
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-cache-
-
-      - name: ⚡ Cache Rust Target
-        uses: actions/cache@v5
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-target-
-
-      - name: clean cargo cache
-        run: |
-          rm -rf target || true
-          cargo install cargo-cache
-          cargo cache --autoclean
+          shared-key: scheduled
+          cache-on-failure: true
 
       - name: Build Cache
         run: |
-          cargo build
+          cargo build --workspace --all-features --all-targets

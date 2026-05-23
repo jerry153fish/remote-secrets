@@ -17,8 +17,10 @@ jobs:
       AWS_REGION: ap-southeast-2
       AWS_ACCESS_KEY_ID: foobar
       AWS_SECRET_ACCESS_KEY: foobar
+      AWS_ENDPOINT_URL: http://localhost:4566
       VAULT_ADDR: http://localhost:8200
       VAULT_TOKEN: vault-plaintext-root-token
+      CARGO_INCREMENTAL: "0"
 
     steps:
       - name: Check out repository code
@@ -29,33 +31,18 @@ jobs:
           toolchain: 1.93.1
           components: clippy, rustfmt
 
-      - name: ⚡ Cache Cargo
-        uses: actions/cache@v5
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-cache-
+          shared-key: test
+          cache-on-failure: true
 
-      - name: ⚡ Cache Cargo Target
-        uses: actions/cache@v5
-        with:
-          path: |
-            target
-          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-            ${{ runner.os }}-target-
-
-      - name: Start mock services
+      - name: Start local services
         run: docker compose -f e2e/services.yaml up -d
 
-      - name: Wait for WireMock
+      - name: Wait for Floci
         run: |
-          ./wait-for.sh http://localhost:8080/__admin/mappings -t 300 -s -- echo 'wiremock up'
+          ./wait-for.sh http://localhost:4566/_floci/init -t 300 -s -- echo 'floci ready'
           make init-test && sleep 2
 
       - name: Run unit tests
@@ -75,6 +62,7 @@ jobs:
       AWS_REGION: ap-southeast-2
       AWS_ACCESS_KEY_ID: foobar
       AWS_SECRET_ACCESS_KEY: foobar
+      AWS_ENDPOINT_URL: http://localhost:4566
       VAULT_ADDR: http://localhost:8200
       VAULT_TOKEN: vault-plaintext-root-token
 
@@ -87,7 +75,7 @@ jobs:
           toolchain: 1.93.1
           components: clippy, rustfmt
 
-      - name: Start mock services
+      - name: Start local services
         run: docker compose -f e2e/services.yaml up -d
 
       - name: Create k8s Kind Cluster
@@ -123,8 +111,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
+            type=gha,scope=remote-secrets-amd64
           cache-to: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64,mode=max,ignore-error=true
+            type=gha,scope=remote-secrets-amd64,mode=max,ignore-error=true
           push: false
           load: true
 
@@ -142,7 +132,7 @@ jobs:
 
       - name: Setup remote secrets in kind
         run: |
-          ./wait-for.sh http://localhost:8080/__admin/mappings -t 300 -s -- echo 'wiremock up'
+          ./wait-for.sh http://localhost:4566/_floci/init -t 300 -s -- echo 'floci ready'
           make init-test
           make kind-image-load
           make install-local
@@ -150,7 +140,7 @@ jobs:
 
           kubectl wait deployment -n remote-secrets remote-secrets --for condition=Available=True --timeout=180s
 
-          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:8080/__admin/mappings'
+          kubectl -n remote-secrets exec $(kubectl get pod -A | grep remote-secrets | awk '{print $2}') -- sh -c 'apk add --no-cache curl && curl http://dockerhost:4566/_floci/init'
 
       - name: Sanity check remote secrets
         run: |
@@ -166,10 +156,10 @@ jobs:
           kubectl -n remote-secrets logs deploy/remote-secrets || true
           docker compose -f e2e/services.yaml logs || true
           kubectl get rsecrets.jerry153fish.com test-rsecret -o yaml || true
-          curl -s http://localhost:8080/__admin/mappings | cat -
-          curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: AmazonSSM.GetParameter' -d '{"Name":"MyStringParameter"}' | cat -
-          curl -s -X POST http://localhost:8080/ -H 'Content-Type: application/x-amz-json-1.1' -H 'X-Amz-Target: secretsmanager.GetSecretValue' -d '{"SecretId":"MyTestSecret"}' | cat -
-          curl -s -X POST http://localhost:8080/ -H 'Content-Type: text/xml' -d 'Action=DescribeStacks&StackName=MyTestStack&Version=2010-05-15' | cat -
+          curl -s http://localhost:4566/_floci/init | cat -
+          docker compose -f e2e/services.yaml exec -T floci aws ssm get-parameter --name MyStringParameter || true
+          docker compose -f e2e/services.yaml exec -T floci aws secretsmanager get-secret-value --secret-id MyTestSecret || true
+          docker compose -f e2e/services.yaml exec -T floci aws cloudformation describe-stacks --stack-name MyTestStack || true
 
   docker-push-amd64:
     runs-on: ubuntu-latest
@@ -206,6 +196,10 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/remote-secrets:sha-${{ github.sha }}-amd64
           cache-from: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64
+            type=gha,scope=remote-secrets-amd64
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-amd64,mode=max
+            type=gha,scope=remote-secrets-amd64,mode=max,ignore-error=true
 
   docker-push-arm64:
     runs-on: ubuntu-24.04-arm
@@ -242,8 +236,10 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/remote-secrets:sha-${{ github.sha }}-arm64
           cache-from: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-arm64
+            type=gha,scope=remote-secrets-arm64
           cache-to: |
             type=registry,ref=ghcr.io/${{ github.repository_owner }}/remote-secrets:buildcache-arm64,mode=max
+            type=gha,scope=remote-secrets-arm64,mode=max,ignore-error=true
 
   docker-push-manifest:
     runs-on: ubuntu-latest

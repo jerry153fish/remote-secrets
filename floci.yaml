@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: floci
+spec:
+  selector:
+    matchLabels:
+      app: floci
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: floci
+    spec:
+      containers:
+        - name: floci
+          image: floci/floci:latest-compat
+          ports:
+            - containerPort: 4566
+              name: floci
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: floci
+spec:
+  selector:
+    app: floci
+  ports:
+    - port: 80
+      targetPort: floci

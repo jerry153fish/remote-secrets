@@ -50,7 +50,7 @@ impl RemoteValue for SSM {
 pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
     let mut ssm_config_builder = aws_sdk_ssm::config::Builder::from(conf);
     if is_test_env() {
-        log::info!("Using mock AWS endpoint for ssm {}", aws_endpoint_url());
+        log::info!("Using local AWS endpoint for ssm {}", aws_endpoint_url());
         ssm_config_builder = ssm_config_builder.endpoint_url(aws_endpoint_url())
     }
     aws_sdk_ssm::Client::from_conf(ssm_config_builder.build())
