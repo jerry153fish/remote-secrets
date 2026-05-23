@@ -39,8 +39,7 @@ COPY k8s k8s
 RUN find crd main utils plugins k8s -type f \( -name '*.rs' -o -name 'Cargo.toml' \) -exec touch {} +
 RUN cargo build --release --bin controller
 
-FROM alpine:3.23
-RUN apk --no-cache add ca-certificates
+FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
-COPY --from=build /app/target/release/controller /app/controller
+COPY --from=build --chown=nonroot:nonroot /app/target/release/controller /app/controller
 CMD ["./controller"]
