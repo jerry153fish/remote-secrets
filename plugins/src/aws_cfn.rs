@@ -86,7 +86,7 @@ pub fn cloudformation_client(conf: &aws_types::SdkConfig) -> aws_sdk_cloudformat
 
 /// get the data from the secret manager store by name
 /// Will cache the result for 60s
-#[cached(ttl = 60, result = true)]
+#[cached(ttl = 60)]
 pub async fn get_cloudformation_outputs(
     stack_name: String,
 ) -> Result<Vec<aws_sdk_cloudformation::types::Output>> {

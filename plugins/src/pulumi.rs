@@ -79,7 +79,7 @@ impl RemoteValue for Pulumi {
     }
 }
 
-#[cached(ttl = 60, result = true)]
+#[cached(ttl = 60)]
 pub async fn get_pulumi_outputs(
     path: String,
     pulumi_token: Option<String>,

@@ -49,7 +49,7 @@ impl RemoteValue for Vault {
     }
 }
 
-#[cached(ttl = 60, result = true)]
+#[cached(ttl = 60)]
 pub async fn get_vault_value(path: String) -> Result<String> {
     let client = get_vault_client(path.clone())?;
     let response: serde_json::Value = client.send().await?.json().await?;
