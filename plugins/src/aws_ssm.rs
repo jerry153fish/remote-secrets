@@ -58,7 +58,7 @@ pub fn ssm_client(conf: &aws_types::SdkConfig) -> aws_sdk_ssm::Client {
 
 /// get the data from the ssm parameter store by name
 /// Will cache the result for 60s
-#[cached(ttl = 60, result = true)]
+#[cached(ttl = 60)]
 pub async fn get_ssm_parameter(name: String) -> Result<String> {
     let shared_config = get_aws_sdk_config().await?;
     let client = ssm_client(&shared_config);
