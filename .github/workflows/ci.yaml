@@ -97,7 +97,7 @@ jobs:
 
       - name: Login to GitHub Container Registry
         continue-on-error: true
-        uses: docker/login-action@v4.5.2
+        uses: docker/login-action@v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -185,7 +185,7 @@ jobs:
 
       - name: Login to GitHub Container Registry
         continue-on-error: true
-        uses: docker/login-action@v4.5.2
+        uses: docker/login-action@v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -225,7 +225,7 @@ jobs:
 
       - name: Login to GitHub Container Registry
         continue-on-error: true
-        uses: docker/login-action@v4.5.2
+        uses: docker/login-action@v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -274,7 +274,7 @@ jobs:
 
       - name: Login to GitHub Container Registry
         continue-on-error: true
-        uses: docker/login-action@v4.5.2
+        uses: docker/login-action@v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
